@@ -1,0 +1,39 @@
+FLUXO DE CAIXA – TESOURARIA (Rioprevidência)
+=============================================
+
+ARQUIVOS
+  index.html                      Estrutura da página. No topo há um comentário com o resumo
+                                  das regras de negócio e de onde vêm as planilhas.
+  css/estilo.css                  Visual. As cores ficam em :root, no começo do arquivo
+                                  (--accent = cor principal; --taxa, --fin, --mil, --prev = planos).
+                                  O bloco @media print, no fim, define o relatório impresso.
+  js/leitor.js                    Leitura das planilhas (aba C.C ou extrato) e reconhecimento
+                                  do plano. Ponto de entrada: parseBook().
+  js/painel.js                    Regras de negócio (receita, despesa, aportes NP e
+                                  transferências Financeiro → Militar), telas, gráficos,
+                                  relatório, pasta do computador e SharePoint (Microsoft Graph).
+  img/logo.jpg, img/favicon.png   Logo e ícone da aba.
+  fluxo-caixa-arquivo-unico.html  O mesmo painel num arquivo só (abre com dois cliques).
+
+COMO ABRIR
+  - Para testar no computador: abra fluxo-caixa-arquivo-unico.html no Edge ou no Chrome.
+  - Para publicar (Vercel, SharePoint ou outro servidor): suba a pasta inteira
+    (index.html + css + js + img). O endereço publicado precisa ser https para o
+    login da Microsoft funcionar.
+
+SHAREPOINT (MICROSOFT GRAPH)
+  O TI registra um aplicativo no Azure (Entra ID):
+    1. Plataforma "Aplicativo de página única (SPA)", com o URI de redirecionamento
+       igual ao endereço onde o painel foi publicado (ex.: https://…/index.html).
+    2. Permissões delegadas do Microsoft Graph: Files.Read.All e Sites.Read.All,
+       com consentimento de administrador.
+    3. Passa o ID do aplicativo (cliente) e o ID do diretório (locatário).
+  Para todos já abrirem configurado, preencha SP_DEFAULT em js/painel.js:
+    const SP_DEFAULT = { clientId: "…", tenant: "…", url: "link da pasta Bancos/2026" };
+
+ONDE MEXER
+  - Regras de aporte ............ js/painel.js → função rebuild()
+  - Reconhecimento do plano ..... js/leitor.js → planoFromName() e planoFromBook()
+  - Telas ....................... js/painel.js → renderOverview(), renderPlano(),
+                                  renderReport(), renderSheetsView()
+  - Relatório impresso .......... js/painel.js → renderReport()  +  css/estilo.css → @media print
