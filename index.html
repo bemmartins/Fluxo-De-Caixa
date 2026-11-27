@@ -5567,7 +5567,11 @@
             ? ui.rplan
             : "todos";
         const { from, to, inP: allP } = ctx();
-        const plansAll = PL.concat(allP.some((t) => t.plano === "sem") ? [SEM] : []);
+        const ORDEM_DECK = ["financeiro", "militar", "previdenciario", "taxa"];
+        const PLD = ORDEM_DECK.map((k) => PL.find((p) => p.k === k))
+          .filter(Boolean)
+          .concat(PL.filter((p) => !ORDEM_DECK.includes(p.k)));
+        const plansAll = PLD.concat(allP.some((t) => t.plano === "sem") ? [SEM] : []);
         const plans = scope === "todos" ? plansAll : plansAll.filter((p) => p.k === scope);
         const inP = scope === "todos" ? allP : allP.filter((t) => t.plano === scope);
         const R = rec(inP),
@@ -5577,8 +5581,7 @@
         const per = cap(periodTitle(from, to));
         const now = new Date();
         const emit = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} às ${pad(now.getHours())}h${pad(now.getMinutes())}`;
-        const scopeTxt =
-          scope === "todos" ? "Taxa · Financeiro · Militar · Previdenciário" : plInfo(scope).full;
+        const scopeTxt = scope === "todos" ? PLD.map((p) => p.l).join(" · ") : plInfo(scope).full;
         const pres = new PptxGenJS();
         pres.layout = "LAYOUT_WIDE";
         pres.author = "Tesouraria · Rioprevidência";
@@ -5651,7 +5654,7 @@
             });
         };
         let nSlide = 0;
-        const base = (title, eyebrow, notes) => {
+        const base = (title, eyebrow, notes, cor) => {
           const s = pres.addSlide({ masterName: "FC_CONTEUDO" });
           nSlide++;
           if (eyebrow)
@@ -5661,12 +5664,13 @@
               w: 9,
               h: 0.3,
               fontSize: 11,
-              color: PX.accent,
+              color: cor || PX.accent,
               bold: true,
               charSpacing: 2,
             });
           T(s, title, { x: M, y: 0.72, w: W - 2 * M, h: 0.7, fontSize: 30, bold: true });
           if (notes) s.addNotes(notes);
+          if (cor) dot(s, W - M - 0.55, 0.75, 0.55, cor);
           return s;
         };
         /* valores dos cartões: abreviados a partir de R$ 1 mi e com espaço inquebrável depois do sinal */
@@ -6043,8 +6047,190 @@
           });
         }
 
+        /* 9. projeção (substitui os pontos de atenção)
+       Método: média mensal de receitas, aportes e despesas dos últimos 3 meses fechados.
+       - mês corrente (incompleto): realizado + média × fração de dias que falta;
+       - meses seguintes: a média cheia;
+       - fechamento do ano: realizado no ano + o que falta até dezembro.
+       Não considera sazonalidade (13º, reajustes, receitas extraordinárias). */
+        const projetar = (L) => {
+          if (!L.length) return null;
+          const last = L.reduce((a, t) => (t.date > a ? t.date : a), "");
+          const y = +last.slice(0, 4),
+            mo = +last.slice(5, 7),
+            dia = +last.slice(8, 10);
+          const dim = new Date(y, mo, 0).getDate();
+          const fechado = dia >= dim - 1;
+          const mk = (yy, mm) => {
+            const d = new Date(yy, mm - 1, 1);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          };
+          const cur = mk(y, mo);
+          const soma = (m) => {
+            const X = L.filter((t) => t.date.startsWith(m));
+            return { m, r: rec(X), a: apo(X), d: des(X), n: X.length };
+          };
+          const fech = [];
+          for (let i = fechado ? 0 : 1; fech.length < 3 && i < 15; i++) {
+            const s0 = soma(mk(y, mo - i));
+            if (s0.n) fech.push(s0);
+          }
+          let med;
+          if (fech.length)
+            med = {
+              r: fech.reduce((a, b) => a + b.r, 0) / fech.length,
+              a: fech.reduce((a, b) => a + b.a, 0) / fech.length,
+              d: fech.reduce((a, b) => a + b.d, 0) / fech.length,
+            };
+          else {
+            const c = soma(cur),
+              f = dim / Math.max(1, dia);
+            med = { r: c.r * f, a: c.a * f, d: c.d * f };
+          }
+          const resM = med.r + med.a - med.d;
+          const atual = soma(cur);
+          const falta = fechado ? 0 : (dim - dia) / dim;
+          const fechAtual = {
+            r: atual.r + med.r * falta,
+            a: atual.a + med.a * falta,
+            d: atual.d + med.d * falta,
+          };
+          fechAtual.x = fechAtual.r + fechAtual.a - fechAtual.d;
+          const futuros = [];
+          for (let i = 1; i <= 6; i++) futuros.push(mk(y, mo + i));
+          const ano = L.filter((t) => t.date.startsWith(String(y)));
+          const xAno = rec(ano) + apo(ano) - des(ano);
+          const restoAno = futuros.filter((m) => m.startsWith(String(y))).length;
+          return {
+            last,
+            cur,
+            fechado,
+            dia,
+            dim,
+            fech,
+            med,
+            resM,
+            atual,
+            fechAtual,
+            futuros,
+            ano: y,
+            fimAno: xAno + resM * falta + resM * restoAno,
+            seis: resM * 6 + (fechado ? 0 : resM * falta),
+          };
+        };
+        const mLab = (m) => `${MESES[+m.slice(5) - 1]}/${m.slice(2, 4)}`;
+        const slideProjecao = (base9, titulo, eyebrow, cor, quem) => {
+          const PJ = projetar(base9);
+          if (!PJ) return;
+          const basTxt = PJ.fech.length
+            ? `média de ${PJ.fech
+                .slice()
+                .reverse()
+                .map((x) => mLab(x.m))
+                .join(", ")}`
+            : `ritmo de ${mLab(PJ.cur)} até o dia ${PJ.dia}`;
+          const s = base(
+            titulo,
+            eyebrow,
+            `Projeção ${quem} pela ${basTxt}: resultado médio de ${sgn(PJ.resM)} por mês ` +
+              `(receitas ${money(PJ.med.r)}, aportes ${sgn(PJ.med.a)}, despesas ${money(PJ.med.d)}). ` +
+              `${PJ.fechado ? "" : `Fechamento previsto de ${MESES_L[+PJ.cur.slice(5) - 1]}: ${sgn(PJ.fechAtual.x)}. `}Fechamento previsto de ${PJ.ano}: ${sgn(PJ.fimAno)}. ` +
+              `Não considera 13º salário nem outras sazonalidades.`,
+            cor,
+          );
+          // gráfico: 6 meses realizados + mês corrente fechado pela previsão + 6 meses projetados
+          const hist = [];
+          for (let i = 6; i >= 1; i--) {
+            const d = new Date(+PJ.cur.slice(0, 4), +PJ.cur.slice(5) - 1 - i, 1);
+            const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+            const X = base9.filter((t) => t.date.startsWith(m));
+            if (X.length || hist.length) hist.push({ m, v: rec(X) + apo(X) - des(X), proj: false });
+          }
+          const linhas = [
+            ...hist,
+            {
+              m: PJ.cur,
+              v: PJ.fechado ? PJ.atual.r + PJ.atual.a - PJ.atual.d : PJ.fechAtual.x,
+              proj: !PJ.fechado,
+              cur: true,
+            },
+            ...PJ.futuros.map((m) => ({ m, v: PJ.resM, proj: true })),
+          ];
+          const u = unitFor(Math.max(1, ...linhas.map((x) => Math.abs(x.v))));
+          const labels = linhas.map((x) => mLab(x.m) + (x.cur && x.proj ? "*" : ""));
+          card(s, M, 1.6, 8.6, 5.05);
+          s.addChart(
+            pres.charts.BAR,
+            [
+              {
+                name: "Realizado",
+                labels,
+                values: linhas.map((x) => (x.proj ? 0 : +(x.v / u.d).toFixed(2))),
+              },
+              {
+                name: "Projetado",
+                labels,
+                values: linhas.map((x) => (x.proj ? +(x.v / u.d).toFixed(2) : 0)),
+              },
+            ],
+            axis({
+              x: M + 0.15,
+              y: 1.7,
+              w: 8.3,
+              h: 4.45,
+              barDir: "col",
+              barGrouping: "stacked",
+              overlap: 100,
+              barGapWidthPct: 45,
+              chartColors: [PX.accent, "8FA9C4"],
+              showLegend: true,
+              legendPos: "b",
+              valAxisLabelFormatCode: "#,##0",
+              showTitle: true,
+              title: `Resultado mensal · ${u.u}`,
+            }),
+          );
+          T(
+            s,
+            `${PJ.fechado ? "" : "* mês em andamento: realizado até o dia " + PJ.dia + " + previsão do restante. "}Base: ${basTxt}.`,
+            { x: M + 0.3, y: 6.2, w: 8.1, h: 0.32, fontSize: 10.5, color: PX.faint },
+          );
+          const xx = M + 8.9,
+            ww = W - M - xx,
+            h = 1.55;
+          const kp = [
+            [
+              PJ.fechado
+                ? `Média mensal prevista`
+                : `Fechamento de ${MESES[+PJ.cur.slice(5) - 1]}/${PJ.cur.slice(2, 4)}`,
+              PJ.fechado ? PJ.resM : PJ.fechAtual.x,
+              PJ.fechado
+                ? "resultado por mês"
+                : `realizado ${bigD(PJ.atual.r + PJ.atual.a - PJ.atual.d, true)} até dia ${PJ.dia}`,
+            ],
+            [`Fechamento de ${PJ.ano}`, PJ.fimAno, "realizado no ano + previsão até dez"],
+            ["Próximos 6 meses", PJ.seis, `${bigD(PJ.resM, true)} por mês, em média`],
+          ];
+          kp.forEach(([l, v, sub], i) => {
+            const y = 1.6 + i * (h + 0.2);
+            card(s, xx, y, ww, h);
+            T(s, l, { x: xx + 0.3, y: y + 0.2, w: ww - 0.6, h: 0.32, fontSize: 13, color: PX.muted });
+            T(s, bigD(v, true), {
+              x: xx + 0.3,
+              y: y + 0.5,
+              w: ww - 0.6,
+              h: 0.55,
+              fontSize: 24,
+              bold: true,
+              color: v < 0 ? PX.neg : PX.pos,
+              fit: "shrink",
+            });
+            T(s, sub, { x: xx + 0.3, y: y + 1.05, w: ww - 0.6, h: 0.3, fontSize: 11, color: PX.faint });
+          });
+        };
+
         /* 4. mês a mês */
-        {
+        const slideEvolucao = (base0, titulo, eyebrow, cor) => {
           let ms = months(from, to);
           if (ms.length < 2) {
             const d = toD(to.slice(0, 8) + "01");
@@ -6055,7 +6241,6 @@
               ms.push(fromD(x).slice(0, 7));
             }
           }
-          const base0 = scope === "todos" ? ALL : ALL.filter((t) => t.plano === scope);
           const by = ms.map((m) => {
             const L = base0.filter((t) => t.date.startsWith(m));
             return { m, r: rec(L), a: apo(L), d: des(L), n: L.length };
@@ -6063,9 +6248,10 @@
           const use = by.slice(by.findIndex((x) => x.n) >= 0 ? by.findIndex((x) => x.n) : 0);
           if (use.length >= 2) {
             const s = base(
-              "Evolução mês a mês",
-              "Tendência",
+              titulo,
+              eyebrow,
               use.map((x) => `${MESES_L[+x.m.slice(5) - 1]}: resultado ${sgn(x.r + x.a - x.d)}.`).join("\n"),
+              cor,
             );
             const mx = Math.max(1, ...use.flatMap((x) => [x.r, Math.abs(x.a), x.d]));
             const u = unitFor(mx);
@@ -6124,7 +6310,12 @@
               T(s, sub, { x: xx + 0.3, y: y + 1.05, w: ww - 0.6, h: 0.3, fontSize: 11, color: PX.faint });
             });
           }
-        }
+        };
+        slideEvolucao(
+          scope === "todos" ? ALL : ALL.filter((t) => t.plano === scope),
+          "Evolução mês a mês",
+          "Tendência",
+        );
 
         /* 5 e 6. naturezas */
         for (const [tipo, titulo, cor, tot] of [
@@ -6265,6 +6456,87 @@
           }
         }
 
+        /* 8a. demais slides de cada fundo (apresentação geral): evolução, naturezas e projeção */
+        const extrasFundo = (p, L) => {
+          const cor = PX[p.k] || PX.accent,
+            todosDoPlano = ALL.filter((t) => t.plano === p.k);
+          slideEvolucao(todosDoPlano, "Evolução mês a mês", `${p.l} · tendência`, cor);
+          // receitas e despesas por natureza, lado a lado
+          const tpR = top(L, "RECEITA", 7),
+            tpD = top(L, "DESPESA", 7);
+          if (tpR.length || tpD.length) {
+            const s = base(
+              "Receitas e despesas por natureza",
+              `${p.l} · naturezas`,
+              [
+                ...tpR.map(([k, v]) => `Receita · ${splitCode(k).name}: ${money(v)}.`),
+                ...tpD.map(([k, v]) => `Despesa · ${splitCode(k).name}: ${money(v)}.`),
+              ].join("\n"),
+              cor,
+            );
+            const cw = (W - 2 * M - 0.3) / 2;
+            [
+              [tpR, "Receitas", PX.pos, rec(L)],
+              [tpD, "Despesas", PX.neg, des(L)],
+            ].forEach(([tp, nome, c, tot], i) => {
+              const x = M + i * (cw + 0.3);
+              card(s, x, 1.6, cw, 5.05);
+              T(s, nome, { x: x + 0.3, y: 1.78, w: cw - 0.6, h: 0.36, fontSize: 16, bold: true });
+              T(s, `${short(tot)} no período`, {
+                x: x + 0.3,
+                y: 1.78,
+                w: cw - 0.6,
+                h: 0.36,
+                fontSize: 13,
+                color: PX.muted,
+                align: "right",
+              });
+              if (!tp.length) {
+                T(s, "Sem lançamentos no período.", {
+                  x: x + 0.3,
+                  y: 2.4,
+                  w: cw - 0.6,
+                  h: 0.4,
+                  fontSize: 13,
+                  color: PX.muted,
+                });
+                return;
+              }
+              const u = unitFor(tp[0][1]);
+              s.addChart(
+                pres.charts.BAR,
+                [
+                  {
+                    name: nome,
+                    labels: tp.map(([k]) => cut(splitCode(k).name, 30)),
+                    values: tp.map(([, v]) => +(v / u.d).toFixed(2)),
+                  },
+                ],
+                axis({
+                  x: x + 0.1,
+                  y: 2.2,
+                  w: cw - 0.2,
+                  h: 4.35,
+                  barDir: "bar",
+                  chartColors: [c],
+                  barGapWidthPct: tp.length < 3 ? 220 : tp.length < 5 ? 120 : 45,
+                  catAxisOrientation: "maxMin",
+                  valAxisHidden: true,
+                  valGridLine: { style: "none" },
+                  showLegend: false,
+                  showValue: true,
+                  dataLabelPosition: "outEnd",
+                  dataLabelFormatCode: u.f,
+                  showTitle: true,
+                  title: u.u,
+                  catAxisLabelFontSize: 9.5,
+                }),
+              );
+            });
+          }
+          slideProjecao(todosDoPlano, "Projeção", `${p.l} · próximos meses`, cor, "do " + p.full);
+        };
+
         /* 8. um slide por plano */
         if (scope === "todos" || plans.length === 1) {
           for (const p of plans) {
@@ -6276,10 +6548,10 @@
               x = r + a - d;
             const s = base(
               p.full,
-              "Plano",
+              scope === "todos" ? `${p.l} · visão geral` : "Plano",
               `${p.full}: receitas ${money(r)}, aportes ${sgn(a)}, despesas ${money(d)}, resultado ${sgn(x)}.`,
+              PX[p.k],
             );
-            dot(s, W - M - 0.55, 0.75, 0.55, PX[p.k]);
             const cw = 2.8,
               gap = (W - 2 * M - 4 * cw) / 3;
             [
@@ -6348,53 +6620,114 @@
                 margin: 0.08,
               });
             });
+
+            if (scope === "todos") extrasFundo(p, L);
           }
         }
 
-        /* 9. pontos de atenção */
-        {
-          const pend = inP.filter((t) => t.tipo === "RECEITA" && t.natK === "Natureza não identificada");
-          const cc = inP.filter((t) => t.conc != null);
-          const nc = cc.filter((t) => t.conc === 0);
-          const miss = ORDER.filter((n) => !planoOf(state.accounts[n]));
-          const items = [
-            [
-              "!",
-              PX.warn,
-              "Receitas sem natureza",
-              pend.length
-                ? `${plural(pend.length, "crédito", "créditos")} somando ${money(rec(pend))} ainda como "Não encontrado".`
-                : "Todas as receitas do período têm natureza identificada.",
-            ],
-            [
-              "✓",
-              nc.length ? PX.warn : PX.pos,
-              "Conciliação",
-              cc.length
-                ? `${pct(cc.length - nc.length, cc.length)} dos lançamentos conciliados · ${plural(nc.length, "pendente", "pendentes")}.`
-                : "As planilhas não informam a conciliação.",
-            ],
-            [
-              "?",
-              miss.length ? PX.warn : PX.pos,
-              "Planilhas sem plano",
-              miss.length
-                ? `${plural(miss.length, "planilha", "planilhas")} sem plano definido: ${cut(miss.join(", "), 80)}.`
-                : "Todas as planilhas estão associadas a um plano.",
-            ],
-          ];
-          const s = base(
-            "Pontos de atenção",
-            "Acompanhamento",
-            items.map((i) => `${i[2]}: ${i[3]}`).join("\n"),
-          );
-          items.forEach(([g, c, t, d], i) => {
-            const y = 1.75 + i * 1.55;
-            card(s, M, y, W - 2 * M, 1.3);
-            dot(s, M + 0.35, y + 0.33, 0.64, c, g);
-            T(s, t, { x: M + 1.3, y: y + 0.22, w: 10, h: 0.42, fontSize: 18, bold: true });
-            T(s, d, { x: M + 1.3, y: y + 0.68, w: W - 2 * M - 1.6, h: 0.42, fontSize: 14, color: PX.muted });
-          });
+        /* 9b. projeção consolidada e por plano */
+        const base9 = scope === "todos" ? ALL : ALL.filter((t) => t.plano === scope);
+        const PJ = projetar(base9);
+        slideProjecao(
+          base9,
+          "Projeção",
+          "Próximos meses",
+          null,
+          scope === "todos" ? "consolidada" : "do " + plInfo(scope).full,
+        );
+        if (PJ) {
+          // por plano (só na apresentação geral)
+          if (scope === "todos") {
+            const rows = PLD.map((p) => ({ p, j: projetar(ALL.filter((t) => t.plano === p.k)) })).filter(
+              (x) => x.j,
+            );
+            if (rows.length) {
+              const s2 = base(
+                "Projeção por plano",
+                "Próximos meses",
+                rows
+                  .map(
+                    ({ p, j }) =>
+                      `${p.full}: ${sgn(j.resM)} por mês; fechamento previsto de ${j.ano}: ${sgn(j.fimAno)}.`,
+                  )
+                  .join("\n"),
+              );
+              const hdr = [
+                "Plano",
+                "Receitas / mês",
+                "Aportes / mês",
+                "Despesas / mês",
+                "Resultado / mês",
+                `Fechamento ${PJ.ano}`,
+                "Próx. 6 meses",
+              ].map((t, j) => ({
+                text: t,
+                options: {
+                  bold: true,
+                  color: PX.muted,
+                  fill: { color: PX.card2 },
+                  align: j ? "right" : "left",
+                },
+              }));
+              const col = (v) => (v < 0 ? PX.neg : PX.pos);
+              const body = rows.map(({ p, j }) => [
+                { text: p.full, options: { bold: true, color: PX[p.k] || PX.ink } },
+                { text: short(j.med.r), options: { align: "right", color: PX.ink } },
+                { text: j.med.a ? bigD(j.med.a, true) : "—", options: { align: "right", color: PX.ink } },
+                { text: short(j.med.d), options: { align: "right", color: PX.ink } },
+                { text: bigD(j.resM, true), options: { align: "right", bold: true, color: col(j.resM) } },
+                { text: bigD(j.fimAno, true), options: { align: "right", bold: true, color: col(j.fimAno) } },
+                { text: bigD(j.seis, true), options: { align: "right", color: col(j.seis) } },
+              ]);
+              const tw = W - 2 * M;
+              s2.addTable([hdr, ...body], {
+                x: M,
+                y: 1.75,
+                w: tw,
+                colW: [3.0, 1.4, 1.4, 1.4, 1.55, 1.69, 1.69],
+                fontFace: PF,
+                fontSize: 13,
+                rowH: 0.62,
+                valign: "middle",
+                border: { type: "solid", pt: 0.5, color: PX.line },
+                fill: { color: PX.card, transparency: 15 },
+                margin: 0.1,
+              });
+              const yN = 1.75 + 0.62 * (rows.length + 1) + 0.45;
+              [
+                [
+                  "Como foi calculado",
+                  `Média mensal de receitas, aportes e despesas dos últimos 3 meses fechados de cada plano. O mês em andamento soma o realizado com a previsão dos dias que faltam.`,
+                ],
+                [
+                  "O que fica de fora",
+                  `Sazonalidades como o 13º salário, reajustes e receitas extraordinárias (royalties fora do padrão, por exemplo). Use como referência, não como meta.`,
+                ],
+              ].forEach(([k, v], i) => {
+                const cw = (tw - 0.3) / 2,
+                  x = M + i * (cw + 0.3);
+                card(s2, x, yN, cw, 1.35);
+                T(s2, k, {
+                  x: x + 0.35,
+                  y: yN + 0.2,
+                  w: cw - 0.7,
+                  h: 0.36,
+                  fontSize: 15,
+                  bold: true,
+                  color: PX.accent,
+                });
+                T(s2, v, {
+                  x: x + 0.35,
+                  y: yN + 0.6,
+                  w: cw - 0.7,
+                  h: 0.65,
+                  fontSize: 12.5,
+                  color: PX.ink,
+                  valign: "top",
+                });
+              });
+            }
+          }
         }
 
         /* 10. metodologia */
@@ -6419,6 +6752,10 @@
             [
               "Resultado",
               "Receitas + aportes − despesas, no período " + per.charAt(0).toLowerCase() + per.slice(1) + ".",
+            ],
+            [
+              "Projeção",
+              "Média mensal dos últimos 3 meses fechados, sem sazonalidade (13º, reajustes). Valores previstos, não realizados.",
             ],
           ];
           regras.forEach(([k, v], i) => {
