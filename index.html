@@ -1840,6 +1840,24 @@
             <path d="M21 12a9 9 0 0 1-15.4 6.4L3 16M3 12a9 9 0 0 1 15.4-6.4L21 8M21 3v5h-5M3 21v-5h5" /></svg
           ><span class="lbl">Atualizar tudo</span>
         </button>
+        <button
+          class="btn"
+          id="btnDeck"
+          type="button"
+          title="Gerar apresentação em PowerPoint do período e plano escolhidos"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="4" width="18" height="12" rx="2" />
+            <path d="M12 16v4M8 20h8M8 12l3-3 2 2 3-3" /></svg
+          ><span class="lbl">Apresentação</span>
+        </button>
         <button class="btn acc" id="btnLoad" type="button">
           <svg
             viewBox="0 0 24 24"
@@ -3211,7 +3229,7 @@
     function emptyView() {
       return `<section class="glass empty"><h2>Conecte a pasta ou carregue as planilhas</h2>
     <p>O painel junta as planilhas de conciliação de todas as contas e mostra o fluxo de caixa por plano: Taxa, Financeiro, Militar e Previdenciário. Entram as linhas de Receita, Despesa e NP (aportes).</p>
-    <div class="acts">${SP.ok ? '<button class="btn acc" type="button" data-go="planilhas">Conectar SharePoint</button><button class="btn" type="button" data-fold="pick">Conectar pasta</button>' : '<button class="btn acc" type="button" data-fold="pick">Conectar pasta</button>'}<button class="btn" type="button" data-act="load">Escolher arquivos</button><button class="btn ghost" type="button" data-act="sample">Ver com dados fictícios</button></div></section>`;
+    <div class="acts">${SPR.ok ? '<button class="btn acc" type="button" data-go="planilhas">Conectar pasta do SharePoint</button>' : SP.ok ? '<button class="btn acc" type="button" data-go="planilhas">Conectar SharePoint</button><button class="btn" type="button" data-fold="pick">Conectar pasta</button>' : '<button class="btn acc" type="button" data-fold="pick">Conectar pasta</button>'}<button class="btn" type="button" data-act="load">Escolher arquivos</button><button class="btn ghost" type="button" data-act="sample">Ver com dados fictícios</button></div>${frameHelp()}</section>`;
     }
     function headHTML(eyebrow, title, desc, from, to, dot) {
       return `<div class="head"><div><div class="eyebrow">${eyebrow}</div><h1>${dot ? `<i style="background:${dot}"></i>` : ""}${title}</h1><p>${desc}</p></div>${from ? periodCtrl(from, to) : ""}</div>`;
@@ -3576,7 +3594,7 @@
         ) +
         sampleFlag() +
         `<div id="docBox" style="display:grid;gap:14px"><div class="rbar glass card" style="padding:12px 14px"><div class="ctrl"><div class="seg" role="group" aria-label="Plano do relatório">${scopeBtns.map(([k, l]) => `<button type="button" data-rplan="${k}" aria-pressed="${ui.rplan === k}">${esc(l)}</button>`).join("")}</div><label><input type="checkbox" id="rsub" ${ui.rsub ? "checked" : ""}> Detalhar cada natureza (identificação e credor)</label></div>
-    <div class="ctrl">${FRAMED ? '<span style="font-size:12.5px;color:var(--muted)">Para imprimir, abra o arquivo no Edge ou no Chrome.</span>' : '<button class="btn acc" type="button" data-act="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Imprimir relatório</button>'}<button class="btn" type="button" data-act="copy">Copiar texto</button></div></div>
+    <div class="ctrl">${FRAMED ? '<span style="font-size:12.5px;color:var(--muted)">Para imprimir, abra o arquivo no Edge ou no Chrome.</span>' : '<button class="btn acc" type="button" data-act="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Imprimir relatório</button>'}<button class="btn" type="button" data-act="deck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8M8 12l3-3 2 2 3-3"/></svg>Gerar apresentação</button><button class="btn" type="button" data-act="copy">Copiar texto</button></div></div>
     <article class="paper" id="doc">${doc}</article></div>`;
     }
 
@@ -3616,6 +3634,7 @@
           "Planilhas",
           `${plural(ORDER.length, "planilha carregada", "planilhas carregadas")}${miss ? ` · <b style="color:var(--warn)">${plural(miss, "sem plano", "sem plano")}</b>` : ""}. O painel não separa por conta corrente: cada planilha entra no plano escolhido aqui.`,
         ) +
+        sprCardHTML() +
         spCardHTML() +
         `<section class="glass folder" id="folder"><span class="fic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
     <div class="fbody"><div class="ftop"><b>Pasta no computador (OneDrive)</b><span id="fstat"></span></div><div class="finfo" id="finfo"></div></div><div class="acts" id="facts"></div><div class="ferr" id="ferr"></div></section>
@@ -3632,6 +3651,8 @@
     <li>Pelo conteúdo da planilha: "Plano Financeiro" nas observações, conta contábil "Fundo em Repartição" (Financeiro) ou "Fundo em Capitalização" (Previdenciário), "Taxa de Administração", "Plano Militar".</li>
     <li>Se não reconhecer, escolha aqui. A escolha fica guardada e vale para as próximas cargas da mesma planilha.</li>
     <li>Entram as linhas de <b>Receita</b> e <b>Despesa</b>, e como <b>Aporte</b> (separado da receita) as linhas <b>NP</b> e as transferências do Financeiro para as contas do Militar marcadas acima. As demais transferências e as aplicações ou resgates (FI) ficam de fora.</li></ul></section>`;
+      renderSPR();
+      if (SPR.ok && SPR.avail == null) sprProbe().then(renderSPR);
       renderSP();
       renderFolder();
     }
@@ -3802,8 +3823,8 @@
           { duration: 480, easing: "cubic-bezier(.2,.8,.2,1)" },
         );
       }
-      $("#btnSync").hidden = !(PASTA.handle || state.folderName || SP.cfg.active);
-      $("#btnSync").disabled = PASTA.lendo || SP.lendo;
+      $("#btnSync").hidden = !(PASTA.handle || state.folderName || SP.cfg.active || SPR.cfg.active);
+      $("#btnSync").disabled = PASTA.lendo || SP.lendo || SPR.lendo;
       savePrefs();
     }
     const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -4202,7 +4223,7 @@
     }
     /* Relê a pasta do computador (force = abre todos os arquivos de novo). */
     async function syncFolder(force) {
-      if (!PASTA.handle || PASTA.lendo || SP.cfg.active) return null;
+      if (!PASTA.handle || PASTA.lendo || SP.cfg.active || SPR.cfg.active) return null;
       let r = null;
       try {
         PASTA.perm = await PASTA.handle.queryPermission({ mode: "read" });
@@ -4265,6 +4286,14 @@
           SP.cfg.active = false;
           spSaveCfg();
         }
+        if (SPR.cfg.active) {
+          SPR.cfg.active = false;
+          sprSaveCfg();
+        }
+        if (state.srcKind === "spr") {
+          state.files = {};
+          state.tabPref = {};
+        }
         await syncFolder(true);
       } catch (e) {
         if (e.name !== "AbortError") {
@@ -4286,6 +4315,7 @@
       else renderFolder();
     }
     async function updateAll() {
+      if (SPR.cfg.active) return syncSPR(true);
       if (SP.cfg.active) return spUpdate();
       if (PASTA.handle) return PASTA.perm === "granted" ? syncFolder(true) : allowFolder();
       if (PASTA.ok) return connectFolder();
@@ -4354,6 +4384,39 @@
         SP.user = t.user || "";
       }
     } catch (e) {}
+    /* Dentro da visualização do SharePoint o painel roda num quadro, onde o login da Microsoft não funciona.
+   directUrl() monta o endereço do próprio arquivo para abrir numa aba sozinha. */
+    /* Endereço direto do arquivo, para abrir o painel numa aba própria quando ele está dentro de um quadro. */
+    function directUrl() {
+      try {
+        if (/^https?:$/.test(location.protocol) && !/\/_layouts\//i.test(location.pathname))
+          return location.origin + location.pathname;
+      } catch (e) {}
+      try {
+        const r = new URL(document.referrer);
+        const id = r.searchParams.get("id");
+        if (id && /\.html?$/i.test(id)) return r.origin + id.split("/").map(encodeURIComponent).join("/");
+      } catch (e) {}
+      return "";
+    }
+    /* caixa isolada (sandbox): sem endereço http próprio e/ou sem armazenamento */
+    function isolated() {
+      try {
+        if (!/^https?:$/.test(location.protocol) || location.origin === "null") return true;
+        localStorage.getItem("x");
+        return false;
+      } catch (e) {
+        return true;
+      }
+    }
+    /* Aviso com o botão "Abrir em nova aba" quando o painel está dentro da visualização do SharePoint. */
+    function frameHelp() {
+      if (!FRAMED || (SPR.ok && SPR.avail !== false)) return "";
+      const u = directUrl();
+      return `<div class="frame-help" style="display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:12.5px;color:var(--muted);margin-top:10px">
+    <span>${!directUrl() && isolated() ? "O painel está aberto dentro de outra página (por exemplo a visualização do SharePoint)." : "O painel está aberto dentro de outra página (por exemplo a visualização do SharePoint). Para entrar com a conta Microsoft e usar a pasta do computador, abra numa aba própria:"}</span>
+    ${!u && isolated() ? "<span>Aqui ele está isolado: a visualização do SharePoint não deixa o painel acessar o SharePoint, a pasta do computador nem guardar dados. Use Escolher pasta ou Adicionar planilhas, ou abra o painel salvo no computador, ou publicado num endereço próprio.</span>" : u ? `<a class="btn acc sm" href="${esc(u)}" target="_blank" rel="noopener">Abrir em nova aba</a><code style="font-family:var(--f-mono);color:var(--ink);background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:8px;padding:3px 8px;overflow-wrap:anywhere">${esc(u)}</code><button class="btn sm" type="button" data-copy="${esc(u)}">Copiar endereço</button>` : "<span>na biblioteca do SharePoint, abra o arquivo pelo menu ⋯ › Abrir › Abrir no navegador, ou copie o link do arquivo e cole numa aba nova.</span>"}</div>`;
+    }
     function spSaveCfg() {
       try {
         localStorage.setItem(STORE + "-sp", JSON.stringify(SP.cfg));
@@ -4824,6 +4887,10 @@
       SP.cfg.active = true;
       SP.edit = false;
       spSaveCfg();
+      if (SPR.cfg.active) {
+        SPR.cfg.active = false;
+        sprSaveCfg();
+      }
       await syncSP(true);
     }
     async function spUpdate() {
@@ -4858,6 +4925,273 @@
         { ok: true, msg: "SharePoint desconectado. As planilhas que vinham de lá saíram do painel." },
       ]);
     }
+    /* ---------- SharePoint por dentro (sem login separado) ----------
+   Quando o painel está guardado no próprio SharePoint e aberto por lá, ele roda com a sessão
+   que a pessoa já tem no navegador e lê as pastas pela API REST do SharePoint (_api).
+   Não precisa de aplicativo no Azure. Se a visualização do SharePoint isolar o arquivo,
+   o teste (sprProbe) avisa que não dá. Para todos já abrirem com a pasta certa, preencha SPR_DEFAULT. */
+    const SPR_DEFAULT = "";
+    const SPR = {
+      ok: /\.sharepoint\.com$/i.test(location.hostname),
+      avail: null,
+      why: "",
+      lendo: false,
+      erros: [],
+      cfg: { url: SPR_DEFAULT, active: false },
+    };
+    try {
+      const c = JSON.parse(localStorage.getItem(STORE + "-spr") || "null");
+      if (c) SPR.cfg = { ...SPR.cfg, ...c };
+    } catch (e) {}
+    function sprSaveCfg() {
+      try {
+        localStorage.setItem(STORE + "-spr", JSON.stringify(SPR.cfg));
+      } catch (e) {}
+    }
+    /* pasta onde está o arquivo do painel (sugestão inicial) */
+    function sprHere() {
+      try {
+        const p = decodeURIComponent(location.pathname);
+        return location.origin + p.slice(0, p.lastIndexOf("/"));
+      } catch (e) {
+        return "";
+      }
+    }
+    /* link colado → site (web) e caminho da pasta no servidor */
+    function sprParse(raw) {
+      let x;
+      try {
+        x = new URL(String(raw || "").trim());
+      } catch (e) {
+        throw new Error("cole o endereço da pasta como aparece na barra do navegador.");
+      }
+      if (!/sharepoint\.com$/i.test(x.hostname))
+        throw new Error("o link precisa ser de um endereço sharepoint.com.");
+      if (x.origin !== location.origin)
+        throw new Error(`a pasta precisa estar no mesmo endereço do painel (${location.hostname}).`);
+      if (/\/:[a-z]:\//i.test(x.pathname))
+        throw new Error(
+          "esse é um link de compartilhamento. Abra a pasta e copie o endereço da barra do navegador.",
+        );
+      const id = x.searchParams.get("id") || x.searchParams.get("RootFolder");
+      let path = id && /\.aspx$/i.test(x.pathname) ? decodeURIComponent(id) : decodeURIComponent(x.pathname);
+      path = path.replace(/\/Forms\/[^/]+\.aspx$/i, "").replace(/\/+$/, "");
+      const m = path.match(/^\/(sites|teams)\/[^/]+/i);
+      return { web: x.origin + (m ? m[0] : ""), folder: path, name: path.split("/").pop() || path };
+    }
+    const sprQ = (s) => encodeURIComponent("'" + String(s).replace(/'/g, "''") + "'");
+    async function sprJson(url) {
+      let r;
+      try {
+        r = await fetch(url, {
+          headers: { Accept: "application/json;odata=nometadata" },
+          credentials: "same-origin",
+        });
+      } catch (e) {
+        throw new Error("o SharePoint não respondeu. A visualização pode estar isolando o painel.");
+      }
+      if (!r.ok)
+        throw Object.assign(
+          new Error(
+            r.status === 404
+              ? "não encontrei essa pasta no SharePoint. Confira o link."
+              : r.status === 401 || r.status === 403
+                ? "sem acesso: a sessão do SharePoint não chegou ao painel ou sua conta não tem acesso a essa pasta."
+                : "o SharePoint respondeu com erro " + r.status + ".",
+          ),
+          { status: r.status },
+        );
+      return r.json();
+    }
+    /* testa se o painel consegue usar a sessão do SharePoint */
+    async function sprProbe() {
+      if (!SPR.ok) {
+        SPR.avail = false;
+        return false;
+      }
+      const m = decodeURIComponent(location.pathname).match(/^\/(sites|teams)\/[^/]+/i);
+      try {
+        const j = await sprJson(location.origin + (m ? m[0] : "") + "/_api/web?$select=Title");
+        SPR.avail = true;
+        SPR.why = j.Title || "";
+      } catch (e) {
+        SPR.avail = false;
+        SPR.why = e.message;
+      }
+      return SPR.avail;
+    }
+    async function sprList(web, folder, prefix = "", depth = 0, out = []) {
+      const base = `${web}/_api/web/GetFolderByServerRelativePath(decodedurl=${sprQ(folder)})`;
+      const files =
+        (await sprJson(base + "/Files?$select=Name,ServerRelativeUrl,Length,TimeLastModified&$top=5000"))
+          .value || [];
+      for (const f of files) {
+        if (f.Name.startsWith("~$") || f.Name.startsWith(".") || !/\.(xlsm|xlsx|xls|csv)$/i.test(f.Name))
+          continue;
+        out.push([
+          prefix + f.Name,
+          {
+            name: f.Name,
+            size: +f.Length || 0,
+            lastModified: Date.parse(f.TimeLastModified) || 0,
+            arrayBuffer: async () => {
+              const r = await fetch(
+                `${web}/_api/web/GetFileByServerRelativePath(decodedurl=${sprQ(f.ServerRelativeUrl)})/$value`,
+                { credentials: "same-origin" },
+              );
+              if (!r.ok) throw new Error("não consegui baixar o arquivo (" + r.status + ")");
+              return r.arrayBuffer();
+            },
+          },
+        ]);
+      }
+      if (depth < 3) {
+        const subs = (await sprJson(base + "/Folders?$select=Name,ServerRelativeUrl")).value || [];
+        for (const d of subs) {
+          if (d.Name === "Forms" || d.Name.startsWith("_")) continue;
+          await sprList(web, d.ServerRelativeUrl, prefix + d.Name + "/", depth + 1, out);
+        }
+      }
+      return out;
+    }
+    async function syncSPR(force) {
+      if (!SPR.ok || !SPR.cfg.active || SPR.lendo) return null;
+      let r = null;
+      SPR.lendo = true;
+      renderSPR();
+      try {
+        const P = sprParse(SPR.cfg.url);
+        if (force) setLoading("Procurando planilhas no SharePoint…");
+        const entries = await sprList(P.web, P.folder);
+        if (state.srcKind !== "spr") {
+          state.files = {};
+          state.tabPref = {};
+        }
+        r = await readEntries(entries, force);
+        SPR.erros = r.erros.slice();
+        if (!r.total && !r.ign.length)
+          SPR.erros = ["nenhuma planilha (.xlsm, .xlsx, .xls ou .csv) nessa pasta nem nas subpastas."];
+        else if (!r.total)
+          SPR.erros = [
+            "nenhuma planilha dessa pasta tem a aba de conciliação (Tipo, DATA, LANÇAMENTO, VALOR).",
+          ];
+        state.srcKind = "spr";
+        state.folderName = P.name;
+        state.folderRead = new Date().toISOString();
+        if (force || r.mudou.length || r.saiu.length || r.replaced.length) {
+          state.updatedAt = state.folderRead;
+          await save();
+          rebuild();
+          render();
+          showReport(folderReport(r, force));
+        } else await save();
+      } catch (e) {
+        SPR.erros = [e.message || String(e)];
+      } finally {
+        SPR.lendo = false;
+        setLoading(null);
+        renderSPR();
+      }
+      return r;
+    }
+    async function sprConnect() {
+      const el = document.getElementById("sprUrl");
+      if (el) SPR.cfg.url = el.value.trim();
+      SPR.erros = [];
+      try {
+        sprParse(SPR.cfg.url);
+      } catch (e) {
+        SPR.erros = [e.message];
+        renderSPR();
+        return;
+      }
+      if (SPR.avail == null) await sprProbe();
+      if (!SPR.avail) {
+        SPR.erros = ["não consegui usar a sessão do SharePoint aqui: " + SPR.why];
+        renderSPR();
+        return;
+      }
+      if (state.srcKind !== "spr") {
+        state.files = {};
+        state.tabPref = {};
+      }
+      SPR.cfg.active = true;
+      sprSaveCfg();
+      if (SP.cfg.active) {
+        SP.cfg.active = false;
+        spSaveCfg();
+      }
+      await syncSPR(true);
+    }
+    async function sprDisconnect() {
+      SPR.cfg.active = false;
+      sprSaveCfg();
+      SPR.erros = [];
+      if (state.srcKind === "spr") {
+        state.files = {};
+        state.folderName = "";
+        state.folderRead = null;
+        state.srcKind = "";
+        compose();
+        await save();
+        rebuild();
+      }
+      render();
+      showReport([
+        {
+          ok: true,
+          msg: "Pasta do SharePoint desconectada. As planilhas que vinham de lá saíram do painel.",
+        },
+      ]);
+    }
+    function sprCardHTML() {
+      if (!SPR.ok) return "";
+      return `<section class="glass folder" id="sprCard"><span class="fic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v5M9.5 13.5 12 16l2.5-2.5"/></svg></span>
+    <div class="fbody"><div class="ftop"><b>Pasta do SharePoint (sem login)</b><span id="sprStat"></span></div><div class="finfo" id="sprInfo"></div></div><div class="acts" id="sprActs"></div>
+    <div id="sprForm" style="flex:1 1 100%"></div><div class="ferr" id="sprErr"></div></section>`;
+    }
+    function renderSPR() {
+      $("#btnSync").hidden = !(PASTA.handle || state.folderName || SP.cfg.active || SPR.cfg.active);
+      const box = $("#sprCard");
+      if (!box) return;
+      const st = $("#sprStat"),
+        info = $("#sprInfo"),
+        acts = $("#sprActs"),
+        form = $("#sprForm");
+      form.innerHTML = "";
+      box.className = "glass folder";
+      const n =
+        state.srcKind === "spr" ? Object.values(state.files || {}).filter((f) => !f.ignored).length : 0;
+      const lida =
+        state.srcKind === "spr" && state.folderRead ? ` · última leitura ${stamp(state.folderRead)}` : "";
+      if (SPR.avail === false && !SPR.cfg.active) {
+        box.classList.add("wait");
+        st.innerHTML = '<span class="pill w">Não disponível aqui</span>';
+        info.innerHTML = `O painel não conseguiu usar a sessão do SharePoint nesta visualização (${esc(SPR.why)}). Use <b>Escolher pasta</b> ou <b>Adicionar planilhas</b> abaixo.`;
+        acts.innerHTML = '<button class="btn" type="button" data-spr="probe">Testar de novo</button>';
+      } else if (SPR.cfg.active) {
+        box.classList.add("on");
+        st.innerHTML = SPR.lendo
+          ? '<span class="pill ok spin">Lendo…</span>'
+          : '<span class="pill ok">Conectada</span>';
+        let nm = "";
+        try {
+          nm = sprParse(SPR.cfg.url).folder;
+        } catch (e) {}
+        info.innerHTML = `Lendo <b>${esc(nm)}</b> · ${plural(n, "arquivo", "arquivos")}${lida}. Usa a sessão do SharePoint, sem login separado. O painel confere a pasta de novo quando você volta para ele e a cada 5 minutos.`;
+        acts.innerHTML = `<button class="btn acc" type="button" data-spr="sync" ${SPR.lendo ? "disabled" : ""}>Atualizar tudo</button><button class="btn" type="button" data-spr="edit">Trocar pasta</button><button class="btn ghost" type="button" data-spr="off">Desconectar</button>`;
+      } else {
+        st.innerHTML = SPR.avail
+          ? '<span class="pill ok">Disponível</span>'
+          : SPR.avail == null
+            ? '<span class="pill off spin">Testando…</span>'
+            : "";
+        info.innerHTML = `O painel está no SharePoint${SPR.why && SPR.avail ? ` (site <b>${esc(SPR.why)}</b>)` : ""} e pode ler as planilhas direto da pasta, com a sua sessão, sem cadastro no Azure. Cole o endereço da pasta Bancos › 2026.`;
+        acts.innerHTML = `<button class="btn acc" type="button" data-spr="connect" ${SPR.lendo ? "disabled" : ""}>Conectar pasta</button>`;
+        form.innerHTML = `<label style="display:grid;gap:4px;font-size:12.5px;color:var(--muted);margin-top:4px">Endereço da pasta no SharePoint<input id="sprUrl" value="${esc(SPR.cfg.url || sprHere())}" autocomplete="off" spellcheck="false" style="background:rgba(0,0,0,.25);border:1px solid var(--line-2);border-radius:10px;padding:8px 11px;font-size:13px;color:var(--ink);font-family:var(--f-mono);width:100%"><span style="font-size:11.5px;color:var(--faint)">Abra a pasta no navegador e copie o endereço da barra (vale o endereço com AllItems.aspx?id=…). Já vem preenchido com a pasta onde o painel está.</span></label>`;
+      }
+      $("#sprErr").innerHTML = SPR.erros.map((e) => `<span>${esc(e)}</span>`).join("");
+    }
     function spCardHTML() {
       return `<section class="glass folder" id="spCard"><span class="fic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8.5a4 4 0 0 1-1 9.5z"/></svg></span>
     <div class="fbody"><div class="ftop"><b>SharePoint (Microsoft Graph)</b><span id="spStat"></span></div><div class="finfo" id="spInfo"></div></div><div class="acts" id="spActs"></div>
@@ -4865,8 +5199,8 @@
     }
     /* SharePoint: desenha o card de conexão na aba Planilhas. */
     function renderSP() {
-      $("#btnSync").hidden = !(PASTA.handle || state.folderName || SP.cfg.active);
-      $("#btnSync").disabled = PASTA.lendo || SP.lendo;
+      $("#btnSync").hidden = !(PASTA.handle || state.folderName || SP.cfg.active || SPR.cfg.active);
+      $("#btnSync").disabled = PASTA.lendo || SP.lendo || SPR.lendo;
       const box = $("#spCard");
       if (!box) return;
       const st = $("#spStat"),
@@ -4886,7 +5220,8 @@
       if (!SP.ok) {
         st.innerHTML = '<span class="pill off">Indisponível aqui</span>';
         info.innerHTML = FRAMED
-          ? "Dentro do Claude a conexão com a Microsoft é bloqueada. Abra o painel pelo endereço onde ele está publicado (Vercel ou SharePoint) para entrar com a conta do trabalho."
+          ? "Aqui o painel está dentro de outra página, e nesse caso a Microsoft bloqueia o login." +
+            frameHelp()
           : "Aberto como arquivo no computador, o login da Microsoft não funciona. Publique o painel num endereço https (por exemplo no Vercel), cadastre esse endereço no aplicativo do Azure e abra por lá.";
         acts.innerHTML = "";
       } else if (SP.cfg.active && !SP.edit) {
@@ -4921,8 +5256,8 @@
     }
     function renderFolder() {
       const box = $("#folder");
-      $("#btnSync").hidden = !(PASTA.handle || state.folderName || SP.cfg.active);
-      $("#btnSync").disabled = PASTA.lendo || SP.lendo;
+      $("#btnSync").hidden = !(PASTA.handle || state.folderName || SP.cfg.active || SPR.cfg.active);
+      $("#btnSync").disabled = PASTA.lendo || SP.lendo || SPR.lendo;
       if (!box) return;
       const st = $("#fstat"),
         info = $("#finfo"),
@@ -4931,7 +5266,7 @@
       const n = Object.values(state.files || {}).filter((f) => !f.ignored).length;
       const lida = state.folderRead ? ` · última leitura ${stamp(state.folderRead)}` : "";
       box.className = "glass folder";
-      if (SP.cfg.active) {
+      if (SP.cfg.active || SPR.cfg.active) {
         st.innerHTML = '<span class="pill off">Em espera</span>';
         info.innerHTML =
           "As planilhas estão vindo do SharePoint. Para usar a pasta sincronizada no computador, conecte-a aqui (o SharePoint é desligado).";
@@ -4964,11 +5299,1211 @@
             ? `Dados da pasta <b>${esc(state.folderName)}</b> · ${plural(n, "arquivo", "arquivos")}${lida}. `
             : "") +
           (FRAMED
-            ? "Para o painel lembrar da pasta e atualizar sozinho, abra o arquivo fluxo-caixa.html no Edge ou no Chrome. Aqui dá para escolher a pasta a cada vez."
+            ? "Para o painel lembrar da pasta e atualizar sozinho, abra o arquivo do painel salvo no computador, no Edge ou no Chrome. Aqui dá para escolher a pasta a cada vez."
             : "Este navegador não guarda a pasta. Use o Edge ou o Chrome para conectar uma vez só. Aqui dá para escolher a pasta a cada vez.");
         acts.innerHTML = `<button class="btn acc" type="button" data-fold="input">${state.folderName ? "Atualizar tudo" : "Escolher pasta"}</button>`;
       }
       $("#ferr").innerHTML = PASTA.erros.map((e) => `<span>${esc(e)}</span>`).join("");
+    }
+
+    /* ---------- apresentação em PowerPoint ----------
+   Gera um .pptx no próprio navegador (PptxGenJS), com os números do período e do plano escolhidos.
+   Gráficos nativos (editáveis no PowerPoint), anotações do apresentador em cada slide. */
+    const PPTX_URL = "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
+    function loadScript(src) {
+      return new Promise((res, rej) => {
+        if (window.PptxGenJS) return res();
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = () => (window.PptxGenJS ? res() : rej(new Error("o gerador de PowerPoint não carregou.")));
+        s.onerror = () =>
+          rej(
+            new Error("não consegui carregar o gerador de PowerPoint. Confira a internet e tente de novo."),
+          );
+        document.head.appendChild(s);
+      });
+    }
+    const PX = {
+      ink: "EAF3FB",
+      muted: "A9C1D9",
+      faint: "6E8BA8",
+      card: "0E2740",
+      card2: "143454",
+      line: "23496E",
+      accent: "4FB0F0",
+      pos: "6FD8A6",
+      neg: "F28F84",
+      apo: "DDEBFA",
+      warn: "F3C46E",
+      taxa: "A98CF7",
+      financeiro: "F2BA4E",
+      militar: "3FCCB0",
+      previdenciario: "F18C5F",
+      sem: "7D93AA",
+    };
+    const PF = "Calibri";
+    /* fundo azul-marinho com brilhos (gradiente não existe no PowerPoint como preenchimento simples, então vira imagem) */
+    function deckBg(strong) {
+      const c = document.createElement("canvas");
+      c.width = 1920;
+      c.height = 1080;
+      const g = c.getContext("2d");
+      const lg = g.createLinearGradient(0, 0, 0, 1080);
+      lg.addColorStop(0, "#0B243B");
+      lg.addColorStop(0.6, "#06131F");
+      lg.addColorStop(1, "#050F19");
+      g.fillStyle = lg;
+      g.fillRect(0, 0, 1920, 1080);
+      const glow = (x, y, r, a) => {
+        const rg = g.createRadialGradient(x, y, 0, x, y, r);
+        rg.addColorStop(0, `rgba(46,132,214,${a})`);
+        rg.addColorStop(1, "rgba(46,132,214,0)");
+        g.fillStyle = rg;
+        g.fillRect(0, 0, 1920, 1080);
+      };
+      glow(180, -80, strong ? 1100 : 900, strong ? 0.5 : 0.32);
+      glow(1800, 140, strong ? 900 : 700, strong ? 0.38 : 0.22);
+      glow(1000, 1300, 1000, strong ? 0.4 : 0.28);
+      return c.toDataURL("image/jpeg", 0.86).replace(/^data:/, "");
+    }
+    function unitFor(max) {
+      if (max >= 1e9) return { d: 1e9, u: "R$ bilhões", f: "#,##0.0" };
+      if (max >= 1e6) return { d: 1e6, u: "R$ milhões", f: "#,##0.0" };
+      if (max >= 1e3) return { d: 1e3, u: "R$ mil", f: "#,##0" };
+      return { d: 1, u: "R$", f: "#,##0" };
+    }
+    const cut = (s, n) => {
+      s = String(s || "");
+      return s.length > n ? s.slice(0, n - 1).trim() + "…" : s;
+    };
+    /* ---------- animações da apresentação ----------
+   A biblioteca do PowerPoint não grava animações, então elas são escritas direto no XML de cada slide:
+   - transição em esmaecer entre os slides;
+   - os elementos entram sozinhos (sem precisar clicar), em ondas: cada cartão entra junto com o que tem dentro;
+   - textos e cartões sobem esmaecendo; gráficos de coluna crescem de baixo, barras e linhas da esquerda, rosca em roda. */
+    async function animarDeck(z) {
+      const EMU = 914400,
+        P = new DOMParser();
+      let id = 0;
+      const nomes = Object.keys(z.files).filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n));
+      for (const nm of nomes) {
+        let xml = await z.file(nm).async("string");
+        // a biblioteca às vezes repete o id de formas (tabelas e número do slide); ids repetidos fazem o PowerPoint pedir "Reparar"
+        {
+          let nid = 1;
+          xml = xml.replace(/<p:cNvPr id="\d+"/g, () => `<p:cNvPr id="${nid++}"`);
+        }
+        z.file(nm, xml);
+        if (xml.includes("<p:timing")) continue;
+        const rels = z.file(nm.replace("slides/", "slides/_rels/") + ".rels");
+        const relXml = rels ? await rels.async("string") : "";
+        const doc = P.parseFromString(xml, "application/xml");
+        const tree = doc.getElementsByTagName("p:spTree")[0];
+        if (!tree) continue;
+        const els = [];
+        for (const el of [...tree.children]) {
+          const tag = el.tagName;
+          if (!["p:sp", "p:pic", "p:graphicFrame"].includes(tag)) continue;
+          const raw = new XMLSerializer().serializeToString(el);
+          if (/type="slidenum"|type="sldNum"/.test(raw)) continue; // número do slide fica parado
+          const c = el.getElementsByTagName("p:cNvPr")[0],
+            off = el.getElementsByTagName("a:off")[0],
+            ext = el.getElementsByTagName("a:ext")[0];
+          if (!c || !off || !ext) continue;
+          const x = +off.getAttribute("x"),
+            y = +off.getAttribute("y"),
+            w = +ext.getAttribute("cx"),
+            h = +ext.getAttribute("cy");
+          let fx = "sobe";
+          if (tag === "p:graphicFrame" && raw.includes('/chart"')) {
+            const rid = (raw.match(/<c:chart[^>]*r:id="([^"]+)"/) || [])[1];
+            const alvo =
+              rid &&
+              (relXml.match(new RegExp('Id="' + rid + '"[^>]*Target="([^"]+)"')) ||
+                relXml.match(new RegExp('Target="([^"]+)"[^>]*Id="' + rid + '"')) ||
+                [])[1];
+            const cx = alvo
+              ? await (
+                  z.file(alvo.startsWith("/") ? alvo.slice(1) : "ppt/" + alvo.replace(/^\.\.\//, "")) || {
+                    async: async () => "",
+                  }
+                ).async("string")
+              : "";
+            fx = cx.includes("<c:doughnutChart")
+              ? "roda"
+              : cx.includes("<c:lineChart")
+                ? "esq"
+                : /<c:barDir val="bar"/.test(cx)
+                  ? "esq"
+                  : "baixo";
+          }
+          const card = tag === "p:sp" && !raw.includes("<a:t>") && w > EMU * 0.8 && h > EMU * 0.5;
+          els.push({
+            spid: c.getAttribute("id"),
+            tag,
+            x,
+            y,
+            w,
+            h,
+            fx,
+            card,
+            temTexto: raw.includes("<a:t>"),
+            bld:
+              tag === "p:sp"
+                ? raw.includes("<p:txBody")
+                  ? "P"
+                  : ""
+                : tag === "p:graphicFrame" && raw.includes('/chart"')
+                  ? "G"
+                  : "",
+          });
+        }
+        if (!els.length) continue;
+        // cada elemento vai com o menor cartão que o contém
+        const tol = EMU * 0.02;
+        for (const e of els) {
+          let best = null;
+          for (const k of els) {
+            if (k === e || !k.card) continue;
+            if (
+              e.x >= k.x - tol &&
+              e.y >= k.y - tol &&
+              e.x + e.w <= k.x + k.w + tol &&
+              e.y + e.h <= k.y + k.h + tol &&
+              (!best || k.w * k.h < best.w * best.h)
+            )
+              best = k;
+          }
+          e.dono = best;
+        }
+        const raiz = (e) => {
+          while (e.dono) e = e.dono;
+          return e;
+        };
+        const grupos = new Map();
+        for (const e of els) {
+          const r = raiz(e);
+          if (!grupos.has(r)) grupos.set(r, []);
+          grupos.get(r).push(e);
+        }
+        const ordem = [...grupos.keys()].sort(
+          (a, b) => Math.round(a.y / (EMU * 0.3)) - Math.round(b.y / (EMU * 0.3)) || a.x - b.x,
+        );
+        let n = 2,
+          par = "",
+          bld = "";
+        const passo = 180;
+        ordem.forEach((g, gi) => {
+          const membros = grupos.get(g).sort((a, b) => (a === g ? -1 : b === g ? 1 : a.y - b.y || a.x - b.x));
+          membros.forEach((e, mi) => {
+            const atraso = gi * passo + (mi ? 60 : 0),
+              first = gi === 0 && mi === 0;
+            const t = () => ++n,
+              alvoEl = `<p:tgtEl><p:spTgt spid="${e.spid}"/></p:tgtEl>`;
+            const set = `<p:set><p:cBhvr><p:cTn id="${t()}" dur="1" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst></p:cTn>${alvoEl}<p:attrNameLst><p:attrName>style.visibility</p:attrName></p:attrNameLst></p:cBhvr><p:to><p:strVal val="visible"/></p:to></p:set>`;
+            let preset, sub, corpo;
+            if (e.fx === "sobe") {
+              preset = 42;
+              sub = 0;
+              const tav = (a, b) =>
+                `<p:tavLst><p:tav tm="0"><p:val><p:strVal val="${a}"/></p:val></p:tav><p:tav tm="100000"><p:val><p:strVal val="${b}"/></p:val></p:tav></p:tavLst>`;
+              corpo =
+                `<p:animEffect transition="in" filter="fade"><p:cBhvr><p:cTn id="${t()}" dur="600"/>${alvoEl}</p:cBhvr></p:animEffect>` +
+                `<p:anim calcmode="lin" valueType="num"><p:cBhvr><p:cTn id="${t()}" dur="600" decel="100000" fill="hold"/>${alvoEl}<p:attrNameLst><p:attrName>ppt_x</p:attrName></p:attrNameLst></p:cBhvr>${tav("#ppt_x", "#ppt_x")}</p:anim>` +
+                `<p:anim calcmode="lin" valueType="num"><p:cBhvr><p:cTn id="${t()}" dur="600" decel="100000" fill="hold"/>${alvoEl}<p:attrNameLst><p:attrName>ppt_y</p:attrName></p:attrNameLst></p:cBhvr>${tav("#ppt_y+.04", "#ppt_y")}</p:anim>`;
+            } else if (e.fx === "roda") {
+              preset = 21;
+              sub = 1;
+              corpo = `<p:animEffect transition="in" filter="wheel(1)"><p:cBhvr><p:cTn id="${t()}" dur="1000"/>${alvoEl}</p:cBhvr></p:animEffect>`;
+            } else {
+              const b = e.fx === "baixo";
+              preset = 22;
+              sub = b ? 4 : 8;
+              corpo = `<p:animEffect transition="in" filter="${b ? "wipe(up)" : "wipe(right)"}"><p:cBhvr><p:cTn id="${t()}" dur="${b ? 900 : 1000}"/>${alvoEl}</p:cBhvr></p:animEffect>`;
+            }
+            const cid = ++n;
+            par += `<p:par><p:cTn id="${cid}" presetID="${preset}" presetClass="entr" presetSubtype="${sub}" fill="hold"${e.bld ? ' grpId="0"' : ""} nodeType="${first ? "afterEffect" : "withEffect"}"><p:stCondLst><p:cond delay="${atraso}"/></p:stCondLst><p:childTnLst>${set}${corpo}</p:childTnLst></p:cTn></p:par>`;
+            if (e.bld === "P")
+              bld += `<p:bldP spid="${e.spid}" grpId="0"${e.temTexto ? "" : ' animBg="1"'}/>`;
+            else if (e.bld === "G")
+              bld += `<p:bldGraphic spid="${e.spid}" grpId="0"><p:bldAsOne/></p:bldGraphic>`;
+          });
+        });
+        // renumera os ids das animações em ordem crescente (o PowerPoint exige ids únicos)
+        let k = 4;
+        par = par.replace(/<p:cTn id="[^"]+"/g, () => `<p:cTn id="${++k}"`);
+        const timing = `<p:timing><p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst><p:seq concurrent="1" nextAc="seek"><p:cTn id="2" dur="indefinite" nodeType="mainSeq"><p:childTnLst><p:par><p:cTn id="3" fill="hold"><p:stCondLst><p:cond delay="indefinite"/><p:cond evt="onBegin" delay="0"><p:tn val="2"/></p:cond></p:stCondLst><p:childTnLst><p:par><p:cTn id="4" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst><p:childTnLst>${par}</p:childTnLst></p:cTn></p:par></p:childTnLst></p:cTn></p:par></p:childTnLst></p:cTn><p:prevCondLst><p:cond evt="onPrev" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:prevCondLst><p:nextCondLst><p:cond evt="onNext" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:nextCondLst></p:seq></p:childTnLst></p:cTn></p:par></p:tnLst>${bld ? `<p:bldLst>${bld}</p:bldLst>` : ""}</p:timing>`;
+        const trans = `<p:transition spd="slow"><p:fade/></p:transition>`;
+        xml = xml.replace("</p:clrMapOvr>", "</p:clrMapOvr>" + trans + timing);
+        z.file(nm, xml);
+      }
+    }
+
+    async function buildDeck() {
+      if (!ALL.length) {
+        showReport([
+          { ok: false, file: "Apresentação", msg: "carregue as planilhas antes de gerar a apresentação." },
+        ]);
+        return;
+      }
+      if (FRAMED && !SPR.ok) {
+        showReport([
+          {
+            ok: false,
+            file: "Apresentação",
+            msg: "aqui o navegador não deixa baixar arquivos. Abra o painel no Edge ou no Chrome (arquivo no computador ou endereço publicado) e clique de novo.",
+          },
+        ]);
+        return;
+      }
+      const btns = [...document.querySelectorAll('[data-act="deck"],#btnDeck')];
+      btns.forEach((b) => (b.disabled = true));
+      setLoading("Montando a apresentação…");
+      try {
+        await loadScript(PPTX_URL);
+        const scope = PLM[ui.view]
+          ? ui.view
+          : ui.view === "relatorios" && ui.rplan !== "todos"
+            ? ui.rplan
+            : "todos";
+        const { from, to, inP: allP } = ctx();
+        const plansAll = PL.concat(allP.some((t) => t.plano === "sem") ? [SEM] : []);
+        const plans = scope === "todos" ? plansAll : plansAll.filter((p) => p.k === scope);
+        const inP = scope === "todos" ? allP : allP.filter((t) => t.plano === scope);
+        const R = rec(inP),
+          A = apo(inP),
+          D = des(inP),
+          X = R + A - D;
+        const per = cap(periodTitle(from, to));
+        const now = new Date();
+        const emit = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} às ${pad(now.getHours())}h${pad(now.getMinutes())}`;
+        const scopeTxt =
+          scope === "todos" ? "Taxa · Financeiro · Militar · Previdenciário" : plInfo(scope).full;
+        const pres = new PptxGenJS();
+        pres.layout = "LAYOUT_WIDE";
+        pres.author = "Tesouraria · Rioprevidência";
+        pres.company = "Rioprevidência";
+        pres.title = "Fluxo de Caixa · " + per;
+        const BG = deckBg(false),
+          BG2 = deckBg(true),
+          LOGOD = LOGO.replace(/^data:/, "");
+        const W = 13.333,
+          M = 0.6;
+        pres.defineSlideMaster({ title: "FC_CAPA", background: { data: BG2 } });
+        pres.defineSlideMaster({
+          title: "FC_CONTEUDO",
+          background: { data: BG },
+          objects: [
+            { image: { data: LOGOD, x: M, y: 6.93, w: 0.3, h: 0.3 } },
+            {
+              text: {
+                text: `Fluxo de Caixa · Tesouraria · ${per}`,
+                options: {
+                  x: M + 0.42,
+                  y: 6.93,
+                  w: 8,
+                  h: 0.3,
+                  fontFace: PF,
+                  fontSize: 10,
+                  color: PX.faint,
+                  valign: "middle",
+                  margin: 0,
+                },
+              },
+            },
+          ],
+          slideNumber: {
+            x: W - M - 0.6,
+            y: 6.93,
+            w: 0.6,
+            h: 0.3,
+            fontFace: PF,
+            fontSize: 10,
+            color: PX.faint,
+            align: "right",
+          },
+        });
+        const T = (s, text, o) =>
+          s.addText(text, { fontFace: PF, color: PX.ink, isTextBox: true, margin: 0, ...o });
+        const card = (s, x, y, w, h, o = {}) =>
+          s.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+            x,
+            y,
+            w,
+            h,
+            rectRadius: 0.12,
+            fill: { color: o.fill || PX.card, transparency: o.tr ?? 8 },
+            line: { color: o.line || PX.line, width: 0.75 },
+          });
+        const dot = (s, x, y, d, color, txt) => {
+          s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { color }, line: { color, width: 0 } });
+          if (txt)
+            T(s, txt, {
+              x,
+              y,
+              w: d,
+              h: d,
+              align: "center",
+              valign: "middle",
+              fontSize: d * 22,
+              bold: true,
+              color: "06131F",
+            });
+        };
+        let nSlide = 0;
+        const base = (title, eyebrow, notes) => {
+          const s = pres.addSlide({ masterName: "FC_CONTEUDO" });
+          nSlide++;
+          if (eyebrow)
+            T(s, eyebrow.toUpperCase(), {
+              x: M,
+              y: 0.42,
+              w: 9,
+              h: 0.3,
+              fontSize: 11,
+              color: PX.accent,
+              bold: true,
+              charSpacing: 2,
+            });
+          T(s, title, { x: M, y: 0.72, w: W - 2 * M, h: 0.7, fontSize: 30, bold: true });
+          if (notes) s.addNotes(notes);
+          return s;
+        };
+        /* valores dos cartões: abreviados a partir de R$ 1 mi e com espaço inquebrável depois do sinal */
+        const bigD = (v, signed) => {
+          if (Math.abs(v) < 0.005) v = 0;
+          const sg = signed && v ? (v < 0 ? "−\u00A0" : "+\u00A0") : "";
+          const m = Math.abs(v) >= 1e6 ? short(Math.abs(v)).replace("−", "") : money(Math.abs(v));
+          return (sg + m).replace("R$ ", "R$\u00A0");
+        };
+        const stat = (s, x, y, w, h, label, value, sub, color, valColor) => {
+          card(s, x, y, w, h);
+          s.addShape(pres.shapes.OVAL, {
+            x: x + 0.28,
+            y: y + 0.33,
+            w: 0.14,
+            h: 0.14,
+            fill: { color },
+            line: { color, width: 0 },
+          });
+          T(s, label, { x: x + 0.52, y: y + 0.24, w: w - 0.8, h: 0.32, fontSize: 13, color: PX.muted });
+          T(s, value, {
+            x: x + 0.28,
+            y: y + 0.62,
+            w: w - 0.5,
+            h: 0.75,
+            fontSize: h > 1.6 ? 30 : 24,
+            bold: true,
+            color: valColor || PX.ink,
+            fit: "shrink",
+          });
+          if (sub)
+            T(s, sub, { x: x + 0.28, y: y + h - 0.55, w: w - 0.5, h: 0.36, fontSize: 11, color: PX.faint });
+        };
+        const axis = (o) => ({
+          catAxisLabelColor: PX.muted,
+          valAxisLabelColor: PX.faint,
+          catAxisLabelFontFace: PF,
+          valAxisLabelFontFace: PF,
+          catAxisLabelFontSize: 11,
+          valAxisLabelFontSize: 10,
+          valGridLine: { color: "1D3D5E", size: 0.5 },
+          catGridLine: { style: "none" },
+          catAxisLineShow: false,
+          valAxisLineShow: false,
+          dataLabelColor: PX.ink,
+          dataLabelFontFace: PF,
+          dataLabelFontSize: 10,
+          legendColor: PX.muted,
+          legendFontFace: PF,
+          legendFontSize: 11,
+          titleColor: PX.muted,
+          titleFontFace: PF,
+          titleFontSize: 12,
+          ...o,
+        });
+        const top = (L, tipo, n) => {
+          const m = new Map();
+          for (const t of L.filter((t) => t.tipo === tipo)) {
+            const v = Math.abs(t.value);
+            m.set(t.natK, (m.get(t.natK) || 0) + v);
+          }
+          return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
+        };
+
+        /* 1. capa */
+        {
+          const s = pres.addSlide({ masterName: "FC_CAPA" });
+          nSlide++;
+          s.addImage({ data: LOGOD, x: M, y: 0.6, w: 0.72, h: 0.72 });
+          T(s, "Rioprevidência", { x: M + 0.95, y: 0.62, w: 5, h: 0.36, fontSize: 16, bold: true });
+          T(s, "Tesouraria", { x: M + 0.95, y: 0.98, w: 5, h: 0.32, fontSize: 13, color: PX.muted });
+          T(s, "FLUXO DE CAIXA", {
+            x: M,
+            y: 2.1,
+            w: 7.4,
+            h: 0.4,
+            fontSize: 14,
+            bold: true,
+            color: PX.accent,
+            charSpacing: 3,
+          });
+          T(s, scope === "todos" ? "Fluxo de caixa por plano" : plInfo(scope).full, {
+            x: M,
+            y: 2.55,
+            w: 7.6,
+            h: 1.7,
+            fontSize: 50,
+            bold: true,
+            valign: "top",
+          });
+          T(s, per, { x: M, y: 4.35, w: 7.4, h: 0.5, fontSize: 22, color: PX.ink });
+          T(s, scopeTxt, { x: M, y: 4.88, w: 7.4, h: 0.4, fontSize: 14, color: PX.muted });
+          T(s, `Emitido em ${emit}`, { x: M, y: 6.7, w: 6, h: 0.35, fontSize: 11, color: PX.faint });
+          const cx = 8.45,
+            cy = 1.95,
+            cw = 4.28,
+            ch = 3.85;
+          card(s, cx, cy, cw, ch, { fill: PX.card2, tr: 10 });
+          T(s, "Resultado do período", {
+            x: cx + 0.4,
+            y: cy + 0.35,
+            w: cw - 0.8,
+            h: 0.35,
+            fontSize: 14,
+            color: PX.muted,
+          });
+          T(s, bigD(X, true), {
+            x: cx + 0.4,
+            y: cy + 0.75,
+            w: cw - 0.8,
+            h: 0.85,
+            fontSize: 38,
+            bold: true,
+            color: X < 0 ? PX.neg : PX.pos,
+            fit: "shrink",
+          });
+          const rows = [
+            ["Receitas", short(R), PX.pos],
+            ["Aportes", A ? (A < 0 ? "− " : "+ ") + short(Math.abs(A)).replace("−", "") : "—", PX.apo],
+            ["Despesas", short(D), PX.neg],
+          ];
+          rows.forEach(([l, v, c], i) => {
+            const y = cy + 1.95 + i * 0.55;
+            s.addShape(pres.shapes.OVAL, {
+              x: cx + 0.42,
+              y: y + 0.13,
+              w: 0.13,
+              h: 0.13,
+              fill: { color: c },
+              line: { color: c, width: 0 },
+            });
+            T(s, l, { x: cx + 0.68, y, w: 1.6, h: 0.4, fontSize: 14, color: PX.muted, valign: "middle" });
+            T(s, v, {
+              x: cx + 2.1,
+              y,
+              w: cw - 2.5,
+              h: 0.4,
+              fontSize: 15,
+              bold: true,
+              align: "right",
+              valign: "middle",
+            });
+          });
+          s.addNotes(
+            `Fluxo de caixa ${scope === "todos" ? "por plano" : "do " + plInfo(scope).full}, ${per}. Resultado de ${sgn(X)}: receitas de ${money(R)}, aportes de ${sgn(A)} e despesas de ${money(D)}.`,
+          );
+        }
+
+        /* 2. resumo */
+        {
+          const topR = top(inP, "RECEITA", 1)[0],
+            topD = top(inP, "DESPESA", 1)[0];
+          const s = base(
+            "Resumo do período",
+            "Visão geral",
+            `Resumo: receitas ${money(R)}, aportes ${sgn(A)}, despesas ${money(D)}, resultado ${sgn(X)}.`,
+          );
+          const cw = 2.8,
+            gap = (W - 2 * M - 4 * cw) / 3;
+          [
+            [
+              "Receitas",
+              short(R),
+              plural(inP.filter((t) => t.tipo === "RECEITA").length, "crédito", "créditos"),
+              PX.pos,
+            ],
+            [
+              "Aportes",
+              A ? (A < 0 ? "− " : "+ ") + short(Math.abs(A)).replace("−", "") : "R$ 0",
+              `entraram ${short(apoIn(inP))}`,
+              PX.apo,
+            ],
+            [
+              "Despesas",
+              short(D),
+              plural(inP.filter((t) => t.tipo === "DESPESA").length, "pagamento", "pagamentos"),
+              PX.neg,
+            ],
+            ["Resultado", bigD(X, true), "receitas + aportes − despesas", X < 0 ? PX.neg : PX.pos],
+          ].forEach(([l, v, sub, c], i) =>
+            stat(
+              s,
+              M + i * (cw + gap),
+              1.7,
+              cw,
+              1.85,
+              l,
+              v,
+              sub,
+              c,
+              i === 3 ? (X < 0 ? PX.neg : PX.pos) : null,
+            ),
+          );
+          // destaques
+          card(s, M, 3.85, 6.3, 2.75);
+          T(s, "Destaques", { x: M + 0.35, y: 4.05, w: 5, h: 0.4, fontSize: 16, bold: true });
+          const hl = [];
+          if (topR)
+            hl.push({
+              k: "Maior receita",
+              v: `${cut(splitCode(topR[0]).name, 46)} · ${short(topR[1])} (${pct(topR[1], R)})`,
+            });
+          if (topD)
+            hl.push({
+              k: "Maior despesa",
+              v: `${cut(splitCode(topD[0]).name, 46)} · ${short(topD[1])} (${pct(topD[1], D)})`,
+            });
+          if (scope === "todos") {
+            const best = plansAll
+              .map((p) => {
+                const L = allP.filter((t) => t.plano === p.k);
+                return [p, rec(L) + apo(L) - des(L), L.length];
+              })
+              .filter((x) => x[2])
+              .sort((a, b) => b[1] - a[1]);
+            if (best.length) {
+              hl.push({ k: "Melhor resultado", v: `${best[0][0].full} · ${sgn(best[0][1])}` });
+              if (best.length > 1)
+                hl.push({
+                  k: "Menor resultado",
+                  v: `${best[best.length - 1][0].full} · ${sgn(best[best.length - 1][1])}`,
+                });
+            }
+          }
+          hl.slice(0, 4).forEach((h, i) => {
+            const y = 4.6 + i * 0.47;
+            T(
+              s,
+              [
+                { text: h.k + "  ", options: { bold: true, color: PX.accent } },
+                { text: h.v, options: { color: PX.ink } },
+              ],
+              { x: M + 0.35, y, w: 5.7, h: 0.42, fontSize: 13, valign: "middle" },
+            );
+          });
+          // receitas por plano
+          if (scope === "todos") {
+            const ds = plansAll
+              .map((p) => ({ p, v: rec(allP.filter((t) => t.plano === p.k)) }))
+              .filter((x) => x.v > 0);
+            card(s, M + 6.6, 3.85, W - 2 * M - 6.6, 2.75);
+            if (ds.length) {
+              s.addChart(
+                pres.charts.DOUGHNUT,
+                [{ name: "Receitas", labels: ds.map((x) => x.p.l), values: ds.map((x) => Math.round(x.v)) }],
+                axis({
+                  x: M + 6.75,
+                  y: 3.95,
+                  w: W - 2 * M - 6.9,
+                  h: 2.55,
+                  holeSize: 62,
+                  chartColors: ds.map((x) => PX[x.p.k]),
+                  showPercent: true,
+                  showValue: false,
+                  showLegend: true,
+                  legendPos: "r",
+                  dataLabelColor: "06131F",
+                  dataLabelFontSize: 10,
+                  showTitle: true,
+                  title: "Receitas por plano",
+                }),
+              );
+            }
+          } else {
+            card(s, M + 6.6, 3.85, W - 2 * M - 6.6, 2.75);
+            const tr = top(inP, "RECEITA", 4);
+            const sum = tr.reduce((a, b) => a + b[1], 0) || 1;
+            T(s, "Receitas por natureza", { x: M + 6.95, y: 4.05, w: 5, h: 0.4, fontSize: 16, bold: true });
+            tr.forEach(([k, v], i) => {
+              const y = 4.6 + i * 0.47;
+              T(s, cut(splitCode(k).name, 36), {
+                x: M + 6.95,
+                y,
+                w: 3.6,
+                h: 0.42,
+                fontSize: 12,
+                color: PX.muted,
+                valign: "middle",
+              });
+              T(s, `${short(v)} · ${pct(v, R)}`, {
+                x: M + 10.4,
+                y,
+                w: 1.75,
+                h: 0.42,
+                fontSize: 12,
+                bold: true,
+                align: "right",
+                valign: "middle",
+              });
+            });
+          }
+        }
+
+        /* 3. resultado por plano */
+        if (scope === "todos") {
+          const rows = plansAll
+            .map((p) => {
+              const L = allP.filter((t) => t.plano === p.k);
+              return { p, r: rec(L), a: apo(L), d: des(L), n: L.length };
+            })
+            .filter((x) => x.n);
+          const s = base(
+            "Resultado por plano",
+            "Planos",
+            rows
+              .map(
+                (x) =>
+                  `${x.p.full}: receitas ${money(x.r)}, aportes ${sgn(x.a)}, despesas ${money(x.d)}, resultado ${sgn(x.r + x.a - x.d)}.`,
+              )
+              .join("\n"),
+          );
+          const mx = Math.max(1, ...rows.flatMap((x) => [x.r, Math.abs(x.a), x.d]));
+          const u = unitFor(mx);
+          card(s, M, 1.6, 7.7, 5.05);
+          const series = [
+            {
+              name: "Receitas",
+              labels: rows.map((x) => x.p.l),
+              values: rows.map((x) => +(x.r / u.d).toFixed(2)),
+            },
+          ];
+          const hasA = rows.some((x) => x.a);
+          if (hasA)
+            series.push({
+              name: "Aportes",
+              labels: rows.map((x) => x.p.l),
+              values: rows.map((x) => +(x.a / u.d).toFixed(2)),
+            });
+          series.push({
+            name: "Despesas",
+            labels: rows.map((x) => x.p.l),
+            values: rows.map((x) => +(x.d / u.d).toFixed(2)),
+          });
+          s.addChart(
+            pres.charts.BAR,
+            series,
+            axis({
+              x: M + 0.15,
+              y: 1.7,
+              w: 7.4,
+              h: 4.85,
+              barDir: "col",
+              barGrouping: "clustered",
+              barGapWidthPct: 60,
+              chartColors: hasA ? [PX.pos, PX.apo, PX.neg] : [PX.pos, PX.neg],
+              showLegend: true,
+              legendPos: "b",
+              showValue: true,
+              dataLabelPosition: "outEnd",
+              dataLabelFormatCode: u.f,
+              valAxisLabelFormatCode: "#,##0",
+              showTitle: true,
+              title: u.u,
+            }),
+          );
+          rows.slice(0, 5).forEach((x, i) => {
+            const y = 1.6 + i * (5.05 / Math.max(4, rows.length));
+            const h = 5.05 / Math.max(4, rows.length) - 0.15;
+            const xx = M + 7.95,
+              ww = W - M - xx;
+            card(s, xx, y, ww, h);
+            dot(s, xx + 0.25, y + h / 2 - 0.22, 0.44, PX[x.p.k]);
+            T(s, x.p.full, { x: xx + 0.85, y: y + 0.14, w: ww - 1, h: 0.34, fontSize: 13, color: PX.muted });
+            T(s, bigD(x.r + x.a - x.d, true), {
+              x: xx + 0.85,
+              y: y + 0.46,
+              w: ww - 1,
+              h: 0.5,
+              fontSize: 22,
+              bold: true,
+              color: x.r + x.a - x.d < 0 ? PX.neg : PX.ink,
+              fit: "shrink",
+            });
+          });
+        }
+
+        /* 4. mês a mês */
+        {
+          let ms = months(from, to);
+          if (ms.length < 2) {
+            const d = toD(to.slice(0, 8) + "01");
+            ms = [];
+            for (let i = 11; i >= 0; i--) {
+              const x = new Date(d);
+              x.setMonth(x.getMonth() - i);
+              ms.push(fromD(x).slice(0, 7));
+            }
+          }
+          const base0 = scope === "todos" ? ALL : ALL.filter((t) => t.plano === scope);
+          const by = ms.map((m) => {
+            const L = base0.filter((t) => t.date.startsWith(m));
+            return { m, r: rec(L), a: apo(L), d: des(L), n: L.length };
+          });
+          const use = by.slice(by.findIndex((x) => x.n) >= 0 ? by.findIndex((x) => x.n) : 0);
+          if (use.length >= 2) {
+            const s = base(
+              "Evolução mês a mês",
+              "Tendência",
+              use.map((x) => `${MESES_L[+x.m.slice(5) - 1]}: resultado ${sgn(x.r + x.a - x.d)}.`).join("\n"),
+            );
+            const mx = Math.max(1, ...use.flatMap((x) => [x.r, Math.abs(x.a), x.d]));
+            const u = unitFor(mx);
+            const labels = use.map((x) => `${MESES[+x.m.slice(5) - 1]}/${x.m.slice(2, 4)}`);
+            const hasA = use.some((x) => x.a);
+            const series = [{ name: "Receitas", labels, values: use.map((x) => +(x.r / u.d).toFixed(2)) }];
+            if (hasA)
+              series.push({ name: "Aportes", labels, values: use.map((x) => +(x.a / u.d).toFixed(2)) });
+            series.push({ name: "Despesas", labels, values: use.map((x) => +(x.d / u.d).toFixed(2)) });
+            card(s, M, 1.6, 8.6, 5.05);
+            s.addChart(
+              pres.charts.LINE,
+              series,
+              axis({
+                x: M + 0.15,
+                y: 1.7,
+                w: 8.3,
+                h: 4.85,
+                chartColors: hasA ? [PX.pos, PX.apo, PX.neg] : [PX.pos, PX.neg],
+                lineSize: 2.5,
+                lineDataSymbol: "circle",
+                lineDataSymbolSize: 6,
+                lineSmooth: true,
+                showLegend: true,
+                legendPos: "b",
+                valAxisLabelFormatCode: "#,##0",
+                showTitle: true,
+                title: u.u,
+              }),
+            );
+            const res = use.map((x) => ({ m: x.m, v: x.r + x.a - x.d }));
+            const best = res.reduce((a, b) => (b.v > a.v ? b : a)),
+              worst = res.reduce((a, b) => (b.v < a.v ? b : a));
+            const avg = res.reduce((a, b) => a + b.v, 0) / res.length;
+            const xx = M + 8.9,
+              ww = W - M - xx,
+              h = 1.55;
+            [
+              ["Melhor mês", `${cap(MESES_L[+best.m.slice(5) - 1])}/${best.m.slice(0, 4)}`, best.v],
+              ["Pior mês", `${cap(MESES_L[+worst.m.slice(5) - 1])}/${worst.m.slice(0, 4)}`, worst.v],
+              ["Média mensal", "resultado por mês", avg],
+            ].forEach(([l, sub, v], i) => {
+              const y = 1.6 + i * (h + 0.2);
+              card(s, xx, y, ww, h);
+              T(s, l, { x: xx + 0.3, y: y + 0.2, w: ww - 0.6, h: 0.32, fontSize: 13, color: PX.muted });
+              T(s, bigD(v, true), {
+                x: xx + 0.3,
+                y: y + 0.5,
+                w: ww - 0.6,
+                h: 0.55,
+                fontSize: 22,
+                bold: true,
+                color: v < 0 ? PX.neg : PX.ink,
+                fit: "shrink",
+              });
+              T(s, sub, { x: xx + 0.3, y: y + 1.05, w: ww - 0.6, h: 0.3, fontSize: 11, color: PX.faint });
+            });
+          }
+        }
+
+        /* 5 e 6. naturezas */
+        for (const [tipo, titulo, cor, tot] of [
+          ["RECEITA", "Receitas por natureza", PX.pos, R],
+          ["DESPESA", "Despesas por natureza", PX.neg, D],
+        ]) {
+          const tp = top(inP, tipo, 8);
+          if (!tp.length) continue;
+          const s = base(
+            titulo,
+            "Naturezas",
+            tp.map(([k, v]) => `${splitCode(k).name}: ${money(v)} (${pct(v, tot)}).`).join("\n"),
+          );
+          const u = unitFor(tp[0][1]);
+          card(s, M, 1.6, 8.6, 5.05);
+          s.addChart(
+            pres.charts.BAR,
+            [
+              {
+                name: titulo,
+                labels: tp.map(([k]) => cut(splitCode(k).name, 42)),
+                values: tp.map(([, v]) => +(v / u.d).toFixed(2)),
+              },
+            ],
+            axis({
+              x: M + 0.15,
+              y: 1.7,
+              w: 8.3,
+              h: 4.85,
+              barDir: "bar",
+              chartColors: [cor],
+              barGapWidthPct: 45,
+              catAxisOrientation: "maxMin",
+              valAxisHidden: true,
+              valGridLine: { style: "none" },
+              showLegend: false,
+              showValue: true,
+              dataLabelPosition: "outEnd",
+              dataLabelFormatCode: u.f,
+              showTitle: true,
+              title: u.u,
+              catAxisLabelFontSize: 10,
+            }),
+          );
+          const xx = M + 8.9,
+            ww = W - M - xx;
+          const top3 = tp.slice(0, 3).reduce((a, b) => a + b[1], 0);
+          const nTot = new Set(inP.filter((t) => t.tipo === tipo).map((t) => t.natK)).size;
+          [
+            [
+              tipo === "RECEITA" ? "Total recebido" : "Total pago",
+              bigD(tot),
+              plural(inP.filter((t) => t.tipo === tipo).length, "lançamento", "lançamentos"),
+            ],
+            ["3 maiores naturezas", pct(top3, tot), "do total do período"],
+            [
+              "Naturezas no período",
+              INT.format(nTot),
+              tipo === "RECEITA" ? "naturezas de receita" : "naturezas de despesa",
+            ],
+          ].forEach(([l, v, sub], i) => {
+            const y = 1.6 + i * 1.75;
+            card(s, xx, y, ww, 1.55);
+            T(s, l, { x: xx + 0.3, y: y + 0.2, w: ww - 0.6, h: 0.32, fontSize: 13, color: PX.muted });
+            T(s, v, {
+              x: xx + 0.3,
+              y: y + 0.5,
+              w: ww - 0.6,
+              h: 0.55,
+              fontSize: 24,
+              bold: true,
+              fit: "shrink",
+            });
+            T(s, sub, { x: xx + 0.3, y: y + 1.05, w: ww - 0.6, h: 0.3, fontSize: 11, color: PX.faint });
+          });
+        }
+
+        /* 7. aportes */
+        {
+          const AP = inP.filter((t) => t.tipo === "APORTE");
+          if (AP.length) {
+            const m = new Map();
+            for (const t of AP) {
+              const k = t.plano + "|" + t.natK;
+              if (!m.has(k)) m.set(k, { p: plInfo(t.plano), nat: t.natK, v: 0, n: 0 });
+              const o = m.get(k);
+              o.v += t.value;
+              o.n++;
+            }
+            const rows = [...m.values()]
+              .sort(
+                (a, b) =>
+                  PL.findIndex((p) => p.k === a.p.k) - PL.findIndex((p) => p.k === b.p.k) || b.v - a.v,
+              )
+              .slice(0, 9);
+            const s = base(
+              "Aportes",
+              "NP e repasses ao Militar",
+              rows
+                .map((r) => `${r.p.full} · ${splitCode(r.nat).name}: ${sgn(r.v)} em ${r.n} lançamentos.`)
+                .join("\n"),
+            );
+            const cw = 3.85,
+              gap = (W - 2 * M - 3 * cw) / 2;
+            [
+              ["Entraram", short(apoIn(inP)), PX.pos],
+              ["Saíram", short(apoOut(inP)), PX.neg],
+              ["Líquido", (A < 0 ? "− " : "+ ") + short(Math.abs(A)).replace("−", ""), PX.apo],
+            ].forEach(([l, v, c], i) => stat(s, M + i * (cw + gap), 1.6, cw, 1.45, l, v, null, c));
+            const hdr = ["Plano", "Aporte", "Qtde", "Valor"].map((t, i) => ({
+              text: t,
+              options: {
+                bold: true,
+                color: PX.muted,
+                fill: { color: PX.card2 },
+                align: i >= 2 ? "right" : "left",
+              },
+            }));
+            const body = rows.map((r) => [
+              { text: r.p.full, options: { color: PX.ink } },
+              { text: cut(splitCode(r.nat).name, 58), options: { color: PX.ink } },
+              { text: INT.format(r.n), options: { align: "right", color: PX.muted } },
+              { text: sgn(r.v), options: { align: "right", bold: true, color: r.v < 0 ? PX.neg : PX.ink } },
+            ]);
+            s.addTable([hdr, ...body], {
+              x: M,
+              y: 3.3,
+              w: W - 2 * M,
+              colW: [2.6, 6.33, 1.2, 2.0],
+              fontFace: PF,
+              fontSize: 12,
+              rowH: 0.36,
+              valign: "middle",
+              border: { type: "solid", pt: 0.5, color: PX.line },
+              fill: { color: PX.card, transparency: 15 },
+              margin: 0.08,
+            });
+          }
+        }
+
+        /* 8. um slide por plano */
+        if (scope === "todos" || plans.length === 1) {
+          for (const p of plans) {
+            const L = allP.filter((t) => t.plano === p.k);
+            if (!L.length) continue;
+            const r = rec(L),
+              a = apo(L),
+              d = des(L),
+              x = r + a - d;
+            const s = base(
+              p.full,
+              "Plano",
+              `${p.full}: receitas ${money(r)}, aportes ${sgn(a)}, despesas ${money(d)}, resultado ${sgn(x)}.`,
+            );
+            dot(s, W - M - 0.55, 0.75, 0.55, PX[p.k]);
+            const cw = 2.8,
+              gap = (W - 2 * M - 4 * cw) / 3;
+            [
+              ["Receitas", short(r), PX.pos],
+              ["Aportes", a ? (a < 0 ? "− " : "+ ") + short(Math.abs(a)).replace("−", "") : "R$ 0", PX.apo],
+              ["Despesas", short(d), PX.neg],
+              ["Resultado", bigD(x, true), x < 0 ? PX.neg : PX.pos],
+            ].forEach(([l, v, c], i) =>
+              stat(
+                s,
+                M + i * (cw + gap),
+                1.6,
+                cw,
+                1.45,
+                l,
+                v,
+                null,
+                c,
+                i === 3 ? (x < 0 ? PX.neg : PX.pos) : null,
+              ),
+            );
+            const tw = (W - 2 * M - 0.3) / 2;
+            [
+              ["RECEITA", "Principais receitas por natureza", r],
+              ["DESPESA", "Principais despesas por natureza", d],
+            ].forEach(([tipo, tt, tot], i) => {
+              const tp = top(L, tipo, 6);
+              const xx = M + i * (tw + 0.3);
+              T(s, tt, { x: xx, y: 3.3, w: tw, h: 0.38, fontSize: 15, bold: true });
+              if (!tp.length) {
+                T(s, "Sem lançamentos no período.", {
+                  x: xx,
+                  y: 3.75,
+                  w: tw,
+                  h: 0.4,
+                  fontSize: 13,
+                  color: PX.muted,
+                });
+                return;
+              }
+              const hdr = ["Natureza", "Valor", "%"].map((t, j) => ({
+                text: t,
+                options: {
+                  bold: true,
+                  color: PX.muted,
+                  fill: { color: PX.card2 },
+                  align: j ? "right" : "left",
+                },
+              }));
+              const body = tp.map(([k, v]) => [
+                { text: cut(splitCode(k).name, 44), options: { color: PX.ink } },
+                { text: short(v), options: { align: "right", bold: true, color: PX.ink } },
+                { text: pct(v, tot), options: { align: "right", color: PX.muted } },
+              ]);
+              s.addTable([hdr, ...body], {
+                x: xx,
+                y: 3.78,
+                w: tw,
+                colW: [tw - 2.25, 1.45, 0.8],
+                fontFace: PF,
+                fontSize: 11.5,
+                rowH: 0.38,
+                valign: "middle",
+                border: { type: "solid", pt: 0.5, color: PX.line },
+                fill: { color: PX.card, transparency: 15 },
+                margin: 0.08,
+              });
+            });
+          }
+        }
+
+        /* 9. pontos de atenção */
+        {
+          const pend = inP.filter((t) => t.tipo === "RECEITA" && t.natK === "Natureza não identificada");
+          const cc = inP.filter((t) => t.conc != null);
+          const nc = cc.filter((t) => t.conc === 0);
+          const miss = ORDER.filter((n) => !planoOf(state.accounts[n]));
+          const items = [
+            [
+              "!",
+              PX.warn,
+              "Receitas sem natureza",
+              pend.length
+                ? `${plural(pend.length, "crédito", "créditos")} somando ${money(rec(pend))} ainda como "Não encontrado".`
+                : "Todas as receitas do período têm natureza identificada.",
+            ],
+            [
+              "✓",
+              nc.length ? PX.warn : PX.pos,
+              "Conciliação",
+              cc.length
+                ? `${pct(cc.length - nc.length, cc.length)} dos lançamentos conciliados · ${plural(nc.length, "pendente", "pendentes")}.`
+                : "As planilhas não informam a conciliação.",
+            ],
+            [
+              "?",
+              miss.length ? PX.warn : PX.pos,
+              "Planilhas sem plano",
+              miss.length
+                ? `${plural(miss.length, "planilha", "planilhas")} sem plano definido: ${cut(miss.join(", "), 80)}.`
+                : "Todas as planilhas estão associadas a um plano.",
+            ],
+          ];
+          const s = base(
+            "Pontos de atenção",
+            "Acompanhamento",
+            items.map((i) => `${i[2]}: ${i[3]}`).join("\n"),
+          );
+          items.forEach(([g, c, t, d], i) => {
+            const y = 1.75 + i * 1.55;
+            card(s, M, y, W - 2 * M, 1.3);
+            dot(s, M + 0.35, y + 0.33, 0.64, c, g);
+            T(s, t, { x: M + 1.3, y: y + 0.22, w: 10, h: 0.42, fontSize: 18, bold: true });
+            T(s, d, { x: M + 1.3, y: y + 0.68, w: W - 2 * M - 1.6, h: 0.42, fontSize: 14, color: PX.muted });
+          });
+        }
+
+        /* 10. metodologia */
+        {
+          const s = base(
+            "Como os números foram calculados",
+            "Metodologia",
+            "Base de cálculo e regras usadas no fluxo de caixa.",
+          );
+          const files = new Set(ORDER.map((n) => state.accounts[n].file).filter(Boolean)).size;
+          const regras = [
+            [
+              "Fonte",
+              `${plural(ORDER.length, "planilha de conciliação", "planilhas de conciliação")} das contas do Rioprevidência${state.folderName ? ` (pasta ${state.folderName})` : ""}.`,
+            ],
+            ["Receitas e despesas", "Linhas de Receita e Despesa da planilha banco, agrupadas por natureza."],
+            [
+              "Aportes",
+              "Linhas NP, separadas da receita, e as transferências do Plano Financeiro para o Plano Militar (saída no Financeiro, entrada no Militar).",
+            ],
+            ["Fora do cálculo", "Demais transferências entre contas e aplicações ou resgates (FI)."],
+            [
+              "Resultado",
+              "Receitas + aportes − despesas, no período " + per.charAt(0).toLowerCase() + per.slice(1) + ".",
+            ],
+          ];
+          regras.forEach(([k, v], i) => {
+            const col = i % 2,
+              row = Math.floor(i / 2);
+            const cw = (W - 2 * M - 0.3) / 2,
+              x = M + col * (cw + 0.3),
+              y = 1.7 + row * 1.6;
+            card(s, x, y, cw, 1.38);
+            T(s, k, {
+              x: x + 0.35,
+              y: y + 0.22,
+              w: cw - 0.7,
+              h: 0.38,
+              fontSize: 16,
+              bold: true,
+              color: PX.accent,
+            });
+            T(s, v, {
+              x: x + 0.35,
+              y: y + 0.62,
+              w: cw - 0.7,
+              h: 0.65,
+              fontSize: 13,
+              color: PX.ink,
+              valign: "top",
+            });
+          });
+          T(s, `Emitido em ${emit} pelo painel Fluxo de Caixa da Tesouraria.`, {
+            x: M,
+            y: 6.45,
+            w: W - 2 * M,
+            h: 0.3,
+            fontSize: 11,
+            color: PX.faint,
+          });
+        }
+
+        const name = `Fluxo de Caixa - ${per.replace(/[\\/:*?"<>|]/g, "-")}${scope === "todos" ? "" : " - " + plInfo(scope).l}.pptx`;
+        const raw = await pres.write({ outputType: "arraybuffer" });
+        let blob;
+        try {
+          const z = await JSZip.loadAsync(raw);
+          try {
+            await animarDeck(z);
+          } catch (e) {
+            console.warn("animações", e);
+          }
+          const nz = new JSZip();
+          for (const [nm, f] of Object.entries(z.files)) {
+            if (f.dir) continue;
+            nz.file(nm, await f.async("uint8array"), { binary: true, createFolders: false });
+          }
+          blob = await nz.generateAsync({
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: { level: 6 },
+            mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          });
+        } catch (e) {
+          blob = new Blob([raw], {
+            type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          });
+        }
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          URL.revokeObjectURL(a.href);
+          a.remove();
+        }, 4000);
+        showReport([
+          {
+            ok: true,
+            msg: `Apresentação <b>${esc(name)}</b> gerada com ${nSlide} slides. Confira na pasta de downloads.`,
+          },
+        ]);
+      } catch (e) {
+        showReport([{ ok: false, file: "Apresentação", msg: esc(e.message || String(e)) }]);
+      } finally {
+        setLoading(null);
+        btns.forEach((b) => (b.disabled = false));
+      }
     }
 
     /* ---------- dados fictícios (um por plano) ---------- */
@@ -5253,6 +6788,43 @@
         render();
         return;
       }
+      const cp = e.target.closest("[data-copy]");
+      if (cp) {
+        try {
+          await navigator.clipboard.writeText(cp.dataset.copy);
+          cp.textContent = "Copiado";
+        } catch (err) {
+          const c = cp.previousElementSibling;
+          const rg = document.createRange();
+          rg.selectNodeContents(c);
+          const se = getSelection();
+          se.removeAllRanges();
+          se.addRange(rg);
+          cp.textContent = "Selecionado: Ctrl+C";
+        }
+        setTimeout(() => {
+          cp.textContent = "Copiar endereço";
+        }, 2500);
+        return;
+      }
+      const sr = e.target.closest("[data-spr]");
+      if (sr) {
+        const a = sr.dataset.spr;
+        if (a === "connect") sprConnect();
+        else if (a === "sync") syncSPR(true);
+        else if (a === "probe") {
+          SPR.avail = null;
+          renderSPR();
+          sprProbe().then(renderSPR);
+        } else if (a === "edit") {
+          SPR.cfg.active = false;
+          sprSaveCfg();
+          renderSPR();
+        } else if (a === "off") {
+          if (confirmStep(sr, "Confirmar: desconectar")) sprDisconnect();
+        }
+        return;
+      }
       const sp = e.target.closest("[data-sp]");
       if (sp) {
         const a = sp.dataset.sp;
@@ -5354,6 +6926,7 @@
         rebuild();
         render();
       } else if (a === "print") window.print();
+      else if (a === "deck") buildDeck();
       else if (a === "copy") {
         const el = $("#doc");
         try {
@@ -5478,6 +7051,7 @@
       else $("#file").click();
     };
     $("#btnSync").onclick = updateAll;
+    $("#btnDeck").onclick = buildDeck;
     $("#file").onchange = (e) => {
       const l = e.target.files;
       if (l && l.length) handleFiles(l);
@@ -5490,7 +7064,8 @@
     };
     const autoSync = () => {
       if (document.visibilityState !== "visible") return;
-      if (SP.cfg.active) syncSP(false);
+      if (SPR.cfg.active) syncSPR(false);
+      else if (SP.cfg.active) syncSP(false);
       else syncFolder(false);
     };
     document.addEventListener("visibilitychange", autoSync);
@@ -5560,7 +7135,8 @@
       booting = false;
       render();
       renderFolder();
-      if (SP.cfg.active && SP.ok) syncSP(false);
+      if (SPR.cfg.active && SPR.ok) syncSPR(false);
+      else if (SP.cfg.active && SP.ok) syncSP(false);
       else if (PASTA.handle && PASTA.perm === "granted") syncFolder(false);
       const velhas = ORDER.filter((n) => {
         const a = state.accounts[n];
